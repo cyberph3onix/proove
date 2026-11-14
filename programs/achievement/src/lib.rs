@@ -15,6 +15,18 @@ pub use state::*;
 
 declare_id!("ACMSSsuJaZ23xezUbkqjCNBhXCcUGEqfNe2cTZBogkRo");
 
+#[cfg(not(feature = "no-entrypoint"))]
+solana_security_txt::security_txt! {
+    name: "Proove Achievement",
+    project_url: "https://github.com/cyberph3onix/proove",
+    contacts: "link:https://github.com/cyberph3onix/proove/security/advisories/new",
+    policy: "https://github.com/cyberph3onix/proove/blob/main/SECURITY.md",
+    preferred_languages: "en",
+    source_code: "https://github.com/cyberph3onix/proove",
+    source_release: env!("CARGO_PKG_VERSION"),
+    auditors: "None"
+}
+
 #[program]
 pub mod achievement {
     use super::*;
