@@ -10,12 +10,14 @@ import { ParticleBackdrop } from "@/components/proove/particle-backdrop";
 import { Avatar } from "@/components/proove/primitives";
 import { useHydrated } from "@/hooks/use-chain";
 import { useChain, useChainStore } from "@/lib/mock/store";
+import { isChainMode } from "@/lib/chain/mode";
+import { ChainSignIn } from "@/components/wallet/chain-sign-in";
 
 /**
  * Mock mode: pick a demo persona (each has its own wallet, gigs and cases).
  * Chain mode restores v1's Privy email/Google sign-in with an embedded wallet.
  */
-export default function SignInClient({ role }: { role: "freelancer" | "client" }) {
+function MockSignIn({ role }: { role: "freelancer" | "client" }) {
   const isFreelancer = role === "freelancer";
   const dest = isFreelancer ? "/dashboard" : "/client";
   const router = useRouter();
@@ -77,4 +79,9 @@ export default function SignInClient({ role }: { role: "freelancer" | "client" }
       </GlassCard>
     </section>
   );
+}
+
+export default function SignInClient({ role }: { role: "freelancer" | "client" }) {
+  if (isChainMode) return <ChainSignIn role={role} />;
+  return <MockSignIn role={role} />;
 }

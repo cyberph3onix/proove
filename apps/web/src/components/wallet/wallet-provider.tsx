@@ -5,10 +5,10 @@ import { PrivyProvider } from "@privy-io/react-auth";
 import { useWallets as usePrivySolanaWallets } from "@privy-io/react-auth/solana";
 import { ConnectionProvider, WalletProvider, useWallet } from "@solana/wallet-adapter-react";
 import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
-import { clusterApiUrl } from "@solana/web3.js";
 
 import "@solana/wallet-adapter-react-ui/styles.css";
 import { PRIVY_APP_ID, privyConfig } from "@/lib/privy/config";
+import { RPC_URL } from "@/lib/chain/mode";
 import { PrivyEmbeddedWalletAdapter } from "@/lib/wallet/privy-solana-adapter";
 
 /**
@@ -34,7 +34,7 @@ function PrivyWalletBridge({ adapter }: { adapter: PrivyEmbeddedWalletAdapter | 
 }
 
 function SolanaProvider({ children }: { children: React.ReactNode }) {
-  const endpoint = useMemo(() => clusterApiUrl("devnet"), []);
+  const endpoint = useMemo(() => RPC_URL, []);
   const { wallets: privyWallets } = usePrivySolanaWallets();
   const solanaWallet = privyWallets[0] ?? null;
 
@@ -72,7 +72,16 @@ if (typeof window !== "undefined") {
   });
 }
 
-export default function AppProviders({ children }: { children: React.ReactNode }) {
+export default function ChainProviders({ children }: { children: React.ReactNode }) {
+  if (!PRIVY_APP_ID) {
+    return (
+      <div className="max-w-[640px] mx-auto px-6 py-24 text-sm text-[#A1A1AA]">
+        Chain mode needs <code className="text-white">NEXT_PUBLIC_PRIVY_APP_ID</code>. Add it to{" "}
+        <code className="text-white">apps/web/.env.local</code>, or run with{" "}
+        <code className="text-white">NEXT_PUBLIC_DATA_MODE=mock</code>.
+      </div>
+    );
+  }
   return (
     <PrivyProvider appId={PRIVY_APP_ID} config={privyConfig}>
       <SolanaProvider>{children}</SolanaProvider>

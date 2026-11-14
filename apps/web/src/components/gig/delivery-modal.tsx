@@ -7,7 +7,9 @@ import { Modal, Field, HashBadge, TxButton, TxError, textareaClass } from "@/com
 import { Button } from "@/components/ui/button";
 import { ReportView } from "./spec-report";
 import { hashDocument, mockHash, sha256Hex } from "@proove/types/hash";
-import { verifyDelivery } from "@/lib/mock/ai";
+import { verifyDelivery as mockVerifyDelivery } from "@/lib/mock/ai";
+import { verifyDelivery as aiVerifyDelivery } from "@/lib/ai/client";
+import { isChainMode } from "@/lib/chain/mode";
 import { useChain } from "@/lib/mock/store";
 import { useTransaction } from "@/lib/tx";
 import { ZERO_HASH } from "@proove/types/types";
@@ -27,6 +29,7 @@ export function DeliveryModal({ milestone, open, onClose }: { milestone: Milesto
   const [verifying, setVerifying] = useState(false);
   const [report, setReport] = useState<VerificationReport | null>(null);
   const [skipAi, setSkipAi] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
   const quality = useChain((s) => s.dev.deliveryQuality);
   const input = useRef<HTMLInputElement>(null);
   const tx = useTransaction();
@@ -57,9 +60,16 @@ export function DeliveryModal({ milestone, open, onClose }: { milestone: Milesto
   async function verify() {
     if (!milestone.spec) return;
     setVerifying(true);
-    const r = await verifyDelivery({ milestone: milestone.address, spec: milestone.spec, files, note, submittedSlot: slotAt(now), quality });
-    setReport(r);
-    setVerifying(false);
+    setAiError(null);
+    try {
+      const params = { milestone: milestone.address, spec: milestone.spec, files, note, submittedSlot: slotAt(now) };
+      const r = isChainMode ? await aiVerifyDelivery(params) : await mockVerifyDelivery({ ...params, quality });
+      setReport(r);
+    } catch (e) {
+      setAiError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setVerifying(false);
+    }
   }
 
   async function submit() {
@@ -124,6 +134,7 @@ export function DeliveryModal({ milestone, open, onClose }: { milestone: Milesto
                 {verifying ? "Checking against the spec…" : report ? "Re-run check" : "Run check"}
               </Button>
             </div>
+            {aiError && <p className="text-xs text-red-300 mb-2">{aiError}</p>}
             {report ? (
               <ReportView report={report} spec={milestone.spec} />
             ) : (

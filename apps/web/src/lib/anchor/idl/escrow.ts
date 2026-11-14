@@ -10,9 +10,52 @@ export type Escrow = {
     "name": "escrow",
     "version": "0.1.0",
     "spec": "0.1.0",
-    "description": "PayGig milestone escrow program"
+    "description": "Proove milestone escrow program"
   },
   "instructions": [
+    {
+      "name": "acceptTerms",
+      "docs": [
+        "Freelancer signs the milestone's committed spec hash before funding."
+      ],
+      "discriminator": [
+        247,
+        234,
+        68,
+        210,
+        107,
+        82,
+        186,
+        229
+      ],
+      "accounts": [
+        {
+          "name": "freelancer",
+          "signer": true,
+          "relations": [
+            "gig"
+          ]
+        },
+        {
+          "name": "gig"
+        },
+        {
+          "name": "milestone",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "specHash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ]
+    },
     {
       "name": "approveMilestone",
       "docs": [
@@ -82,6 +125,40 @@ export type Escrow = {
           "relations": [
             "vault"
           ]
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  116,
+                  111,
+                  99,
+                  111,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "treasuryTokenAccount",
+          "docs": [
+            "Receives the protocol fee."
+          ],
+          "writable": true
         },
         {
           "name": "escrowAuthority",
@@ -266,38 +343,38 @@ export type Escrow = {
             "program": {
               "kind": "const",
               "value": [
-                138,
-                188,
-                137,
-                16,
-                99,
-                11,
+                105,
+                37,
+                105,
+                52,
+                245,
+                118,
+                177,
+                157,
                 27,
-                215,
-                184,
-                253,
-                198,
-                73,
-                162,
-                239,
-                8,
-                26,
-                161,
-                238,
-                101,
-                151,
-                242,
-                194,
-                220,
-                219,
-                190,
-                222,
-                104,
+                243,
+                123,
+                49,
+                99,
                 75,
-                207,
-                217,
-                154,
-                17
+                81,
+                26,
+                56,
+                37,
+                79,
+                246,
+                10,
+                219,
+                100,
+                73,
+                36,
+                35,
+                15,
+                116,
+                131,
+                90,
+                44,
+                106
               ]
             }
           }
@@ -356,6 +433,33 @@ export type Escrow = {
           }
         },
         {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  116,
+                  111,
+                  99,
+                  111,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
           "name": "systemProgram",
           "address": "11111111111111111111111111111111"
         }
@@ -364,13 +468,22 @@ export type Escrow = {
         {
           "name": "amount",
           "type": "u64"
+        },
+        {
+          "name": "specHash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
         }
       ]
     },
     {
       "name": "fullTimeoutRelease",
       "docs": [
-        "Permissionless release of the remaining balance after 7 days of client inaction."
+        "Permissionless release of the remaining balance after `full_timeout` of client inaction."
       ],
       "discriminator": [
         54,
@@ -426,6 +539,40 @@ export type Escrow = {
           "relations": [
             "vault"
           ]
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  116,
+                  111,
+                  99,
+                  111,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "treasuryTokenAccount",
+          "docs": [
+            "Receives the protocol fee."
+          ],
+          "writable": true
         },
         {
           "name": "escrowAuthority",
@@ -564,6 +711,33 @@ export type Escrow = {
           ]
         },
         {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  116,
+                  111,
+                  99,
+                  111,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
           "name": "escrowAuthority",
           "pda": {
             "seeds": [
@@ -607,9 +781,80 @@ export type Escrow = {
       "args": []
     },
     {
+      "name": "initProtocolConfig",
+      "docs": [
+        "One-time setup of the protocol config (first caller becomes admin)."
+      ],
+      "discriminator": [
+        91,
+        97,
+        211,
+        137,
+        96,
+        222,
+        139,
+        40
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  116,
+                  111,
+                  99,
+                  111,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "treasury",
+          "docs": [
+            "USDC token account that receives protocol fees."
+          ]
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "settings",
+          "type": {
+            "defined": {
+              "name": "protocolSettings"
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "partialTimeoutRelease",
       "docs": [
-        "Permissionless 20% release after 72 hours of client inaction."
+        "Permissionless partial release (`partial_bps`) after `partial_timeout` of client inaction."
       ],
       "discriminator": [
         249,
@@ -664,6 +909,40 @@ export type Escrow = {
           "relations": [
             "vault"
           ]
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  116,
+                  111,
+                  99,
+                  111,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "treasuryTokenAccount",
+          "docs": [
+            "Receives the protocol fee."
+          ],
+          "writable": true
         },
         {
           "name": "tokenProgram",
@@ -748,38 +1027,38 @@ export type Escrow = {
             "program": {
               "kind": "const",
               "value": [
-                241,
-                252,
-                49,
-                238,
-                150,
-                64,
-                144,
-                100,
-                18,
-                111,
-                254,
-                150,
-                181,
-                168,
-                229,
-                211,
-                48,
-                181,
-                141,
-                8,
-                58,
-                158,
-                243,
-                115,
-                238,
-                100,
+                66,
+                73,
+                176,
+                95,
+                1,
+                251,
+                147,
+                244,
+                206,
+                41,
+                170,
+                149,
+                47,
+                0,
+                31,
+                138,
+                227,
+                240,
+                20,
+                41,
+                42,
+                16,
+                54,
+                34,
+                235,
+                132,
+                102,
+                226,
+                5,
                 218,
-                177,
-                77,
-                204,
-                86,
-                33
+                72,
+                27
               ]
             }
           }
@@ -838,6 +1117,199 @@ export type Escrow = {
               32
             ]
           }
+        }
+      ]
+    },
+    {
+      "name": "refundAfterDeadline",
+      "docs": [
+        "Client reclaims a funded milestone with no delivery after deadline + grace."
+      ],
+      "discriminator": [
+        175,
+        189,
+        26,
+        90,
+        209,
+        113,
+        41,
+        159
+      ],
+      "accounts": [
+        {
+          "name": "client",
+          "signer": true,
+          "relations": [
+            "gig"
+          ]
+        },
+        {
+          "name": "gig",
+          "writable": true
+        },
+        {
+          "name": "milestone",
+          "writable": true
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "gig"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vaultTokenAccount",
+          "writable": true
+        },
+        {
+          "name": "clientTokenAccount",
+          "writable": true
+        },
+        {
+          "name": "mint",
+          "relations": [
+            "gig",
+            "vault"
+          ]
+        },
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  116,
+                  111,
+                  99,
+                  111,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "escrowAuthority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "gigProgram",
+          "address": "85SttowTEpVzdLhqsVy9YKVBX2DhuwnDicpNqaG38P37"
+        },
+        {
+          "name": "tokenProgram",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "setProtocolAdmin",
+      "docs": [
+        "Admin hands the config to a new admin (the DAO in Phase 2)."
+      ],
+      "discriminator": [
+        48,
+        249,
+        109,
+        189,
+        157,
+        197,
+        31,
+        183
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  116,
+                  111,
+                  99,
+                  111,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "newAdmin",
+          "type": "pubkey"
         }
       ]
     },
@@ -937,38 +1409,38 @@ export type Escrow = {
             "program": {
               "kind": "const",
               "value": [
-                241,
-                252,
-                49,
-                238,
-                150,
-                64,
-                144,
-                100,
-                18,
-                111,
-                254,
-                150,
-                181,
-                168,
-                229,
-                211,
-                48,
-                181,
-                141,
-                8,
-                58,
-                158,
-                243,
-                115,
-                238,
-                100,
+                66,
+                73,
+                176,
+                95,
+                1,
+                251,
+                147,
+                244,
+                206,
+                41,
+                170,
+                149,
+                47,
+                0,
+                31,
+                138,
+                227,
+                240,
+                20,
+                41,
+                42,
+                16,
+                54,
+                34,
+                235,
+                132,
+                102,
+                226,
+                5,
                 218,
-                177,
-                77,
-                204,
-                86,
-                33
+                72,
+                27
               ]
             }
           }
@@ -1009,9 +1481,119 @@ export type Escrow = {
         {
           "name": "milestone",
           "writable": true
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "gig"
+              }
+            ]
+          }
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "deliveryHash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "reportHash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "updateProtocolConfig",
+      "docs": [
+        "Admin updates protocol settings; every value is range-checked."
+      ],
+      "discriminator": [
+        197,
+        97,
+        123,
+        54,
+        221,
+        168,
+        11,
+        135
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  116,
+                  111,
+                  99,
+                  111,
+                  108,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "treasury",
+          "docs": [
+            "Fee destination; pass the current one to keep it."
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "settings",
+          "type": {
+            "defined": {
+              "name": "protocolSettings"
+            }
+          }
+        }
+      ]
     }
   ],
   "accounts": [
@@ -1039,6 +1621,19 @@ export type Escrow = {
         184,
         10,
         44
+      ]
+    },
+    {
+      "name": "protocolConfig",
+      "discriminator": [
+        207,
+        91,
+        250,
+        28,
+        152,
+        179,
+        215,
+        209
       ]
     }
   ],
@@ -1133,6 +1728,58 @@ export type Escrow = {
         191,
         157
       ]
+    },
+    {
+      "name": "protocolConfigUpdated",
+      "discriminator": [
+        20,
+        99,
+        32,
+        237,
+        111,
+        86,
+        195,
+        199
+      ]
+    },
+    {
+      "name": "protocolFeeCollected",
+      "discriminator": [
+        149,
+        0,
+        167,
+        154,
+        105,
+        146,
+        209,
+        134
+      ]
+    },
+    {
+      "name": "refundedAfterDeadline",
+      "discriminator": [
+        167,
+        167,
+        230,
+        97,
+        229,
+        51,
+        39,
+        91
+      ]
+    },
+    {
+      "name": "termsAccepted",
+      "discriminator": [
+        186,
+        49,
+        0,
+        112,
+        165,
+        155,
+        138,
+        79
+      ]
     }
   ],
   "errors": [
@@ -1190,6 +1837,46 @@ export type Escrow = {
       "code": 6010,
       "name": "gigNotFundable",
       "msg": "Gig must be in Assigned or InProgress status to create/fund a milestone"
+    },
+    {
+      "code": 6011,
+      "name": "amountBelowMinimum",
+      "msg": "Milestone amount is below the protocol minimum"
+    },
+    {
+      "code": 6012,
+      "name": "specHashMismatch",
+      "msg": "The spec hash does not match the milestone's committed spec"
+    },
+    {
+      "code": 6013,
+      "name": "termsNotAccepted",
+      "msg": "The freelancer has not accepted this milestone's terms yet"
+    },
+    {
+      "code": 6014,
+      "name": "noFreelancer",
+      "msg": "The gig has no assigned freelancer"
+    },
+    {
+      "code": 6015,
+      "name": "outOfRange",
+      "msg": "A protocol setting is outside its allowed range"
+    },
+    {
+      "code": 6016,
+      "name": "gracePeriodActive",
+      "msg": "The no-delivery grace period has not passed yet"
+    },
+    {
+      "code": 6017,
+      "name": "invalidTreasury",
+      "msg": "Treasury token account does not match the protocol config"
+    },
+    {
+      "code": 6018,
+      "name": "missingDeliveryHash",
+      "msg": "A delivery hash is required"
     }
   ],
   "types": [
@@ -1209,6 +1896,28 @@ export type Escrow = {
           {
             "name": "submittedAt",
             "type": "i64"
+          },
+          {
+            "name": "submittedSlot",
+            "type": "u64"
+          },
+          {
+            "name": "deliveryHash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "reportHash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
           }
         ]
       }
@@ -1275,6 +1984,36 @@ export type Escrow = {
           {
             "name": "bump",
             "type": "u8"
+          },
+          {
+            "name": "totalFees",
+            "docs": [
+              "Protocol fees sent to the treasury across this gig's milestones."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "totalRefunded",
+            "docs": [
+              "Amount returned to the client across this gig's milestones."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "refundedMilestones",
+            "docs": [
+              "Milestones closed via `refund_after_deadline`; they count as accounted",
+              "for in settlement, like cancelled ones."
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "lateDeliveries",
+            "docs": [
+              "Deliveries submitted after the gig deadline; any late delivery makes",
+              "the job count as not on time in reputation."
+            ],
+            "type": "u32"
           }
         ]
       }
@@ -1392,6 +2131,9 @@ export type Escrow = {
           },
           {
             "name": "archived"
+          },
+          {
+            "name": "disputed"
           }
         ]
       }
@@ -1415,6 +2157,9 @@ export type Escrow = {
           },
           {
             "name": "released",
+            "docs": [
+              "Net amount paid out to the freelancer (after protocol fees)."
+            ],
             "type": "u64"
           },
           {
@@ -1436,6 +2181,84 @@ export type Escrow = {
           {
             "name": "bump",
             "type": "u8"
+          },
+          {
+            "name": "specHash",
+            "docs": [
+              "SHA-256 of the RFC 8785 canonical milestone spec; zero = no spec."
+            ],
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "deliveryHash",
+            "docs": [
+              "SHA-256 of the canonical delivery manifest."
+            ],
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "reportHash",
+            "docs": [
+              "SHA-256 of the canonical verification report; zero = none."
+            ],
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "termsAccepted",
+            "docs": [
+              "Freelancer signed `accept_terms` against `spec_hash`."
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "submittedSlot",
+            "docs": [
+              "Slot of `submit_delivery`; the sample audit seeds from `submitted_slot + 2`."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "fundedAt",
+            "type": "i64"
+          },
+          {
+            "name": "partialTimeout",
+            "type": "i64"
+          },
+          {
+            "name": "fullTimeout",
+            "type": "i64"
+          },
+          {
+            "name": "partialBps",
+            "type": "u16"
+          },
+          {
+            "name": "feeBps",
+            "type": "u16"
+          },
+          {
+            "name": "feesPaid",
+            "type": "u64"
+          },
+          {
+            "name": "refunded",
+            "type": "u64"
           }
         ]
       }
@@ -1504,6 +2327,15 @@ export type Escrow = {
           {
             "name": "amount",
             "type": "u64"
+          },
+          {
+            "name": "specHash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
           }
         ]
       }
@@ -1547,6 +2379,15 @@ export type Escrow = {
           },
           {
             "name": "completed"
+          },
+          {
+            "name": "refunded"
+          },
+          {
+            "name": "disputed"
+          },
+          {
+            "name": "resolved"
           }
         ]
       }
@@ -1567,6 +2408,203 @@ export type Escrow = {
           {
             "name": "amountReleased",
             "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "protocolConfig",
+      "docs": [
+        "Singleton protocol settings, owned by escrow. The admin is an",
+        "upgrade-authority-held key in Phase 1; Phase 2 hands it to the DAO.",
+        "Milestones snapshot the timeout/bps terms when they are funded, so a",
+        "change only affects milestones funded afterwards."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "treasury",
+            "docs": [
+              "USDC token account that receives protocol fees."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "partialTimeout",
+            "type": "i64"
+          },
+          {
+            "name": "fullTimeout",
+            "type": "i64"
+          },
+          {
+            "name": "partialBps",
+            "type": "u16"
+          },
+          {
+            "name": "feeBps",
+            "type": "u16"
+          },
+          {
+            "name": "minMilestone",
+            "type": "u64"
+          },
+          {
+            "name": "noDeliveryGrace",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "protocolConfigUpdated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "treasury",
+            "type": "pubkey"
+          },
+          {
+            "name": "partialTimeout",
+            "type": "i64"
+          },
+          {
+            "name": "fullTimeout",
+            "type": "i64"
+          },
+          {
+            "name": "partialBps",
+            "type": "u16"
+          },
+          {
+            "name": "feeBps",
+            "type": "u16"
+          },
+          {
+            "name": "minMilestone",
+            "type": "u64"
+          },
+          {
+            "name": "noDeliveryGrace",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "protocolFeeCollected",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "gig",
+            "type": "pubkey"
+          },
+          {
+            "name": "milestone",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "protocolSettings",
+      "docs": [
+        "Settings passed to `init_protocol_config` / `update_protocol_config`."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "partialTimeout",
+            "type": "i64"
+          },
+          {
+            "name": "fullTimeout",
+            "type": "i64"
+          },
+          {
+            "name": "partialBps",
+            "type": "u16"
+          },
+          {
+            "name": "feeBps",
+            "type": "u16"
+          },
+          {
+            "name": "minMilestone",
+            "type": "u64"
+          },
+          {
+            "name": "noDeliveryGrace",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "refundedAfterDeadline",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "gig",
+            "type": "pubkey"
+          },
+          {
+            "name": "milestone",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "termsAccepted",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "gig",
+            "type": "pubkey"
+          },
+          {
+            "name": "milestone",
+            "type": "pubkey"
+          },
+          {
+            "name": "freelancer",
+            "type": "pubkey"
+          },
+          {
+            "name": "specHash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
           }
         ]
       }
@@ -1635,6 +2673,24 @@ export type Escrow = {
           {
             "name": "bump",
             "type": "u8"
+          },
+          {
+            "name": "onTimeJobs",
+            "docs": [
+              "Jobs where every delivery landed on or before the gig deadline."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "disputesWon",
+            "docs": [
+              "Disputed jobs whose ruling gave the freelancer at least half."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "disputesLost",
+            "type": "u64"
           }
         ]
       }
@@ -1653,6 +2709,14 @@ export type Escrow = {
       "name": "milestoneSeed",
       "type": "bytes",
       "value": "[109, 105, 108, 101, 115, 116, 111, 110, 101]"
+    },
+    {
+      "name": "protocolConfigSeed",
+      "docs": [
+        "Seed for the singleton `ProtocolConfig` PDA."
+      ],
+      "type": "bytes",
+      "value": "[112, 114, 111, 116, 111, 99, 111, 108, 95, 99, 111, 110, 102, 105, 103]"
     },
     {
       "name": "vaultSeed",

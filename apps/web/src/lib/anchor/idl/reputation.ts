@@ -10,7 +10,7 @@ export type Reputation = {
     "name": "reputation",
     "version": "0.1.0",
     "spec": "0.1.0",
-    "description": "PayGig decentralized reputation program"
+    "description": "Proove decentralized reputation program"
   },
   "instructions": [
     {
@@ -240,38 +240,38 @@ export type Reputation = {
             "program": {
               "kind": "const",
               "value": [
-                98,
-                89,
-                203,
-                75,
-                160,
-                199,
-                161,
-                198,
-                78,
-                224,
-                178,
-                231,
-                212,
-                210,
-                144,
-                11,
-                129,
-                238,
-                195,
-                112,
-                87,
-                254,
-                168,
-                100,
-                27,
-                110,
-                193,
-                247,
-                158,
-                72,
                 9,
-                63
+                171,
+                214,
+                136,
+                77,
+                97,
+                135,
+                178,
+                191,
+                149,
+                228,
+                128,
+                226,
+                11,
+                227,
+                123,
+                15,
+                198,
+                5,
+                248,
+                231,
+                97,
+                234,
+                93,
+                145,
+                208,
+                118,
+                44,
+                131,
+                219,
+                236,
+                52
               ]
             }
           }
@@ -407,38 +407,38 @@ export type Reputation = {
             "program": {
               "kind": "const",
               "value": [
-                98,
-                89,
-                203,
-                75,
-                160,
-                199,
-                161,
-                198,
-                78,
-                224,
-                178,
-                231,
-                212,
-                210,
-                144,
-                11,
-                129,
-                238,
-                195,
-                112,
-                87,
-                254,
-                168,
-                100,
-                27,
-                110,
-                193,
-                247,
-                158,
-                72,
                 9,
-                63
+                171,
+                214,
+                136,
+                77,
+                97,
+                135,
+                178,
+                191,
+                149,
+                228,
+                128,
+                226,
+                11,
+                227,
+                123,
+                15,
+                198,
+                5,
+                248,
+                231,
+                97,
+                234,
+                93,
+                145,
+                208,
+                118,
+                44,
+                131,
+                219,
+                236,
+                52
               ]
             }
           }
@@ -477,6 +477,16 @@ export type Reputation = {
         {
           "name": "earnings",
           "type": "u64"
+        },
+        {
+          "name": "deliveredOnTime",
+          "type": "bool"
+        },
+        {
+          "name": "disputedOutcome",
+          "type": {
+            "option": "u16"
+          }
         }
       ]
     }
@@ -644,6 +654,11 @@ export type Reputation = {
       "code": 6010,
       "name": "metadataTooLong",
       "msg": "Badge metadata exceeds maximum length"
+    },
+    {
+      "code": 6011,
+      "name": "invalidDisputeOutcome",
+      "msg": "Dispute outcome must be between 0 and 10000 basis points"
     }
   ],
   "types": [
@@ -766,6 +781,18 @@ export type Reputation = {
           },
           {
             "name": "reputationScore",
+            "type": "u64"
+          },
+          {
+            "name": "onTimeJobs",
+            "type": "u64"
+          },
+          {
+            "name": "disputesWon",
+            "type": "u64"
+          },
+          {
+            "name": "disputesLost",
             "type": "u64"
           }
         ]
@@ -952,6 +979,24 @@ export type Reputation = {
           {
             "name": "bump",
             "type": "u8"
+          },
+          {
+            "name": "onTimeJobs",
+            "docs": [
+              "Jobs where every delivery landed on or before the gig deadline."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "disputesWon",
+            "docs": [
+              "Disputed jobs whose ruling gave the freelancer at least half."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "disputesLost",
+            "type": "u64"
           }
         ]
       }

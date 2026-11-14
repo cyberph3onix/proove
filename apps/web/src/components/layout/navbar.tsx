@@ -19,6 +19,8 @@ import { useChainStore } from "@/lib/mock/store";
 import { Avatar } from "@/components/proove/primitives";
 import { formatRelative, formatUsdc } from "@proove/types/format";
 import { cn } from "@/lib/utils";
+import { isChainMode } from "@/lib/chain/mode";
+import { ChainSignOut } from "@/components/wallet/chain-sign-out";
 
 const TALENT_CATEGORIES = [
   { label: "Smart Contract Dev", description: "Solana, EVM & audits" },
@@ -104,11 +106,15 @@ function AccountMenu({ className }: { className?: string }) {
   const links = [
     { href: role === "client" ? "/client" : "/dashboard", label: "Dashboard" },
     { href: `/reputation/${address}`, label: "Public profile" },
-    { href: "/disputes", label: "Disputes" },
-    ...(isArbitrator ? [{ href: "/arbitrate", label: "Arbitrate" }] : []),
-    { href: "/receivables", label: "Receivables" },
-    { href: "/credentials", label: "Credentials" },
-    { href: "/governance", label: isCouncil ? "Governance (council)" : "Governance" },
+    ...(isChainMode
+      ? []
+      : [
+          { href: "/disputes", label: "Disputes" },
+          ...(isArbitrator ? [{ href: "/arbitrate", label: "Arbitrate" }] : []),
+          { href: "/receivables", label: "Receivables" },
+          { href: "/credentials", label: "Credentials" },
+          { href: "/governance", label: isCouncil ? "Governance (council)" : "Governance" },
+        ]),
     { href: "/wallet", label: "Wallet" },
   ];
 
@@ -153,16 +159,20 @@ function AccountMenu({ className }: { className?: string }) {
                 {l.label}
               </Link>
             ))}
-            <button
-              onClick={() => {
-                useChainStore.getState().setPersona(null);
-                setOpen(false);
-                router.push("/");
-              }}
-              className="w-full text-left rounded-xl px-3 py-2 text-sm text-[#A1A1AA] hover:bg-white/5 hover:text-white flex items-center gap-2"
-            >
-              <LogOut size={14} /> Sign out
-            </button>
+            {isChainMode ? (
+              <ChainSignOut onDone={() => setOpen(false)} />
+            ) : (
+              <button
+                onClick={() => {
+                  useChainStore.getState().setPersona(null);
+                  setOpen(false);
+                  router.push("/");
+                }}
+                className="w-full text-left rounded-xl px-3 py-2 text-sm text-[#A1A1AA] hover:bg-white/5 hover:text-white flex items-center gap-2"
+              >
+                <LogOut size={14} /> Sign out
+              </button>
+            )}
           </div>
         </div>
       )}

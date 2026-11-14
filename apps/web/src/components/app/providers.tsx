@@ -2,17 +2,18 @@
 
 import { useEffect } from "react";
 import { useChainStore } from "@/lib/mock/store";
+import { isChainMode } from "@/lib/chain/mode";
+import ChainProviders from "@/components/wallet/wallet-provider";
+import { ChainSync } from "@/components/wallet/chain-sync";
 import { Toaster } from "./toaster";
 import { DevPanel } from "./dev-panel";
 
 /**
- * Mock-mode providers: rehydrate the persisted mock chain (or seed it), run
- * the keeper every few seconds, and mount toasts and the dev panel.
- *
- * Chain mode (Phase 1+) will mount Privy + wallet-adapter here instead
- * (see components/wallet/wallet-provider.tsx, kept from v1).
+ * Mock mode: rehydrate the persisted chain (or seed it), run the keeper and
+ * mount the dev panel. Chain mode: Privy + wallet-adapter, then mirror the
+ * indexer/RPC into the same store.
  */
-export function AppProviders({ children }: { children: React.ReactNode }) {
+function MockProviders({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const store = useChainStore;
     Promise.resolve(store.persist.rehydrate()).finally(() => store.getState().init());
@@ -27,4 +28,18 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
       <DevPanel />
     </>
   );
+}
+
+export function AppProviders({ children }: { children: React.ReactNode }) {
+  if (isChainMode) {
+    return (
+      <ChainProviders>
+        <ChainSync>
+          {children}
+          <Toaster />
+        </ChainSync>
+      </ChainProviders>
+    );
+  }
+  return <MockProviders>{children}</MockProviders>;
 }

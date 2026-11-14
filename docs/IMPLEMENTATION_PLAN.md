@@ -76,15 +76,15 @@ The working checklist for building the PRD (`Doodle v2 — Product Requirements 
 - [x] Random sample audit: seed from `SlotHashes` at `submitted_slot + 2`; anyone can recompute the sample. (`packages/storage`. The seed is only on-chain for ~512 slots, so the report records it; a follow-up could store it on the milestone.)
 
 ### Frontend wiring
-- [ ] Add a data-mode switch (`NEXT_PUBLIC_DATA_MODE=mock|chain`). In chain mode, restore Privy + wallet-adapter (`components/wallet/wallet-provider.tsx`) and back `hooks/use-chain.ts` with indexer + RPC.
-- [ ] `lib/tx.ts` chain mode: build, sign, send and confirm with the same phases; map Anchor errors to messages.
-- [ ] Scope Compiler and verifier call `services/ai` instead of `lib/mock/ai.ts`.
+- [x] Add a data-mode switch (`NEXT_PUBLIC_DATA_MODE=mock|chain`). In chain mode, restore Privy + wallet-adapter (`components/wallet/wallet-provider.tsx`) and back `hooks/use-chain.ts` with indexer + RPC. (`lib/chain/sync.ts` mirrors `/v1/*` + token balances into the existing store; only Phase 1 routes are covered. Milestone specs committed before assignment are queued locally and created by `assignFreelancer`.)
+- [x] `lib/tx.ts` chain mode: build, sign, send and confirm with the same phases; map Anchor errors to messages.
+- [ ] Scope Compiler and verifier call `services/ai` instead of `lib/mock/ai.ts`. (Delivery verifier is wired in chain mode; the Scope Compiler still uses the mock.)
 
 ### Exit gate (devnet, UI only)
 - [ ] Happy path: brief → spec → edit → accept terms → fund → deliver with report → approve → settle reputation → rate → claim a non-transferable badge.
 - [ ] Silent client: the keeper releases 20% at 72 h and the rest at 7 days.
 - [ ] No delivery: refund after deadline + grace.
-- [ ] CI (GitHub Actions): fmt, clippy, Rust tests, `anchor build`, `solana-verify build`, IDL drift, web lint/build/test, e2e on a local validator.
+- [ ] CI (GitHub Actions): fmt, clippy, Rust tests, `anchor build`, `solana-verify build`, IDL drift, web lint/build/test, e2e on a local validator. (`.github/workflows/ci.yml` now runs workspace typecheck/tests plus web lint/build; the Rust/IDL/e2e jobs need keypair secrets and are still pending.)
 
 ## Phase 2: Disputes, reliability, DAO
 

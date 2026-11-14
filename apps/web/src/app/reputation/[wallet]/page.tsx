@@ -1,6 +1,7 @@
 "use client";
 
-import { use, useMemo } from "react";
+import { use, useEffect, useMemo } from "react";
+import { PublicKey } from "@solana/web3.js";
 import Link from "next/link";
 import { Award, Lock } from "lucide-react";
 import { GlassCard, Eyebrow } from "@/components/ui/glass-card";
@@ -14,6 +15,10 @@ import { BADGE_META, MAX_REPUTATION_SCORE, scoreBreakdown } from "@proove/types/
 import { formatDate, formatStars, formatUsdc } from "@proove/types/format";
 import { mockAddress } from "@proove/types/hash";
 import { useTransaction } from "@/lib/tx";
+import { deriveProfile } from "@/lib/anchor/pdas";
+import { isChainMode } from "@/lib/chain/mode";
+import { watchWallet } from "@/lib/chain/sync";
+import { CHAIN_REFRESH_EVENT } from "@/components/wallet/chain-sync";
 
 function Profile({ wallet }: { wallet: string }) {
   const { profile, badges, ratings } = useProfile(wallet);
@@ -22,8 +27,14 @@ function Profile({ wallet }: { wallet: string }) {
   const allCredentials = useChain((s) => s.credentials);
   const credentials = useMemo(() => allCredentials.filter((c) => c.subject === wallet && !c.revoked), [allCredentials, wallet]);
   const tx = useTransaction();
-  const pda = mockAddress(`profile-pda:${wallet}`);
+  const pda = isChainMode ? deriveProfile(new PublicKey(wallet)).toBase58() : mockAddress(`profile-pda:${wallet}`);
   const mine = address === wallet;
+
+  useEffect(() => {
+    if (!isChainMode) return;
+    watchWallet(wallet);
+    window.dispatchEvent(new Event(CHAIN_REFRESH_EVENT));
+  }, [wallet]);
 
   if (!profile) {
     return (

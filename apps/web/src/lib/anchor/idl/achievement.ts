@@ -10,7 +10,7 @@ export type Achievement = {
     "name": "achievement",
     "version": "0.1.0",
     "spec": "0.1.0",
-    "description": "PayGig NFT achievement program"
+    "description": "Proove NFT achievement program"
   },
   "instructions": [
     {
@@ -60,38 +60,38 @@ export type Achievement = {
             "program": {
               "kind": "const",
               "value": [
-                241,
-                252,
-                49,
-                238,
-                150,
-                64,
-                144,
-                100,
-                18,
-                111,
-                254,
-                150,
-                181,
-                168,
-                229,
-                211,
-                48,
-                181,
-                141,
-                8,
-                58,
-                158,
-                243,
-                115,
-                238,
-                100,
+                66,
+                73,
+                176,
+                95,
+                1,
+                251,
+                147,
+                244,
+                206,
+                41,
+                170,
+                149,
+                47,
+                0,
+                31,
+                138,
+                227,
+                240,
+                20,
+                41,
+                42,
+                16,
+                54,
+                34,
+                235,
+                132,
+                102,
+                226,
+                5,
                 218,
-                177,
-                77,
-                204,
-                86,
-                33
+                72,
+                27
               ]
             }
           }
@@ -600,6 +600,24 @@ export type Achievement = {
           {
             "name": "bump",
             "type": "u8"
+          },
+          {
+            "name": "onTimeJobs",
+            "docs": [
+              "Jobs where every delivery landed on or before the gig deadline."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "disputesWon",
+            "docs": [
+              "Disputed jobs whose ruling gave the freelancer at least half."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "disputesLost",
+            "type": "u64"
           }
         ]
       }
