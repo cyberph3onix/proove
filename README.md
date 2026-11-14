@@ -13,7 +13,7 @@ The full spec is in [`Doodle v2 — Product Requirements Document.md`](./Doodle%
 | Anchor programs | Phase 1, next. v1 programs live in the v1 repo and will be ported with the PRD's additive changes. |
 | Services (indexer, keeper, AI, storage) | Phase 1, next: TypeScript with local Postgres. |
 
-Nothing is deployed. Everything on screen comes from the mock chain until Phase 1 lands.
+Nothing is deployed. Everything on screen comes from the mock chain until Phase 1 lands. The phase-by-phase checklist is in [`docs/IMPLEMENTATION_PLAN.md`](./docs/IMPLEMENTATION_PLAN.md).
 
 ## Run it
 
