@@ -19,7 +19,7 @@ Nothing is deployed. Everything on screen comes from the mock chain until Phase 
 
 ```bash
 pnpm install
-pnpm dev            # http://localhost:3000
+pnpm dev            # http://localhost:3100
 pnpm --filter @proove/web test
 ```
 
