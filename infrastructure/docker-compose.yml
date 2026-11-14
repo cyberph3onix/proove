@@ -1,0 +1,26 @@
+# Local services for Proove development.
+#   docker compose -f infrastructure/docker-compose.yml up -d
+name: proove
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: proove-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-proove}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-proove}
+      POSTGRES_DB: ${POSTGRES_DB:-proove_indexer}
+    ports:
+      # 5433 on the host so a locally installed Postgres on 5432 keeps working.
+      - "${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - proove-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  proove-pgdata:
