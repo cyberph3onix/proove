@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "setup": "tsx src/init.ts",
+    "e2e": "tsx src/e2e.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
