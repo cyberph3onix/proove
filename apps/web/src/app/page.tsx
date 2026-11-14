@@ -2,9 +2,22 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion, useMotionValueEvent, useScroll } from "framer-motion";
 import { FileCheck2, Gavel, Landmark, BadgeCheck, Receipt, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
+import {
+  CredentialCard3D,
+  CriteriaStack,
+  DisputeChamber,
+  HeroLaptop,
+  MilestoneTrack,
+  Poster,
+  ReceivableHandoff,
+  Scene3D,
+  SettingDials,
+} from "@/components/three";
 import { useCases, useHydrated, useAllMilestones } from "@/hooks/use-chain";
 import { lockedRemaining } from "@/lib/domain/dispute";
 import { formatUsdc } from "@/lib/domain/format";
@@ -71,61 +84,138 @@ function LiveStats() {
   );
 }
 
+/** Step shown for a scroll position; boundaries line up with the laptop poses in laptop-scenes.tsx. */
+function stepAt(p: number) {
+  if (p < 0.06) return -1;
+  if (p < 0.26) return 0;
+  if (p < 0.47) return 1;
+  if (p < 0.66) return 2;
+  return 3;
+}
+
+/** Banner image: shown on the server, with reduced motion, without WebGL, or before three.js loads. */
+function HeroPoster() {
+  return (
+    <div className="absolute inset-0 flex items-center justify-center">
+      <Image src="/images/hero-banner.png" alt="" fill priority sizes="100vw" className="object-cover object-center" />
+    </div>
+  );
+}
+
+/** Small looping 3D illustration for each feature card. */
+function FeatureScene({ index }: { index: number }) {
+  const [flip, setFlip] = useState(false);
+  useEffect(() => {
+    const id = setInterval(() => setFlip((f) => !f), 3200);
+    return () => clearInterval(id);
+  }, []);
+  const scenes: [string, (on: boolean) => React.ReactNode][] = [
+    ["Four criteria cards stacking up; one is flagged", (on) => <CriteriaStack active={on} count={4} flagged={[false, false, flip, false]} />],
+    ["Three AI juror seats and an arbitrator bench", (on) => <DisputeChamber active={on} seats={flip ? ["posted", "posted", "posted"] : ["posted", "running", "pending"]} arbitratorsSigned={flip ? 1 : 0} arbitratorsRequired={2} ruling={null} />],
+    ["Milestone rings filling toward their automatic release", (on) => <MilestoneTrack active={on} nodes={[{ progress: 1, state: "done" }, { progress: flip ? 0.8 : 0.45, state: "active" }, { progress: 0, state: "idle" }]} />],
+    ["Protocol setting dials", (on) => <SettingDials active={on} values={flip ? [0.3, 0.7, 0.5] : [0.45, 0.55, 0.65]} />],
+    ["A credential card flipping between front and fields", (on) => <CredentialCard3D active={on} flipped={flip} front={{ title: "Work record", subject: "Kai Mensah", schema: "proove.work-summary.v1" }} fields={[["completed_jobs", "15"], ["on_time", "93%"], ["average_rating", "4.7"]]} />],
+    ["A receivable passing from freelancer to buyer", (on) => <ReceivableHandoff active={on} toBuyer={flip} />],
+  ];
+  const [label, render] = scenes[index];
+  return (
+    <Scene3D className="h-[160px] -mx-5 -mt-5 mb-4 border-b border-white/[0.06]" label={label} poster={<Poster />}>
+      {render}
+    </Scene3D>
+  );
+}
+
 export default function Home() {
+  const storyRef = useRef<HTMLDivElement>(null);
+  const progress = useRef(0);
+  const [step, setStep] = useState(-1);
+  const { scrollYProgress } = useScroll({ target: storyRef, offset: ["start start", "end end"] });
+  useMotionValueEvent(scrollYProgress, "change", (v) => {
+    progress.current = v;
+    setStep(stepAt(v));
+  });
+  const wordmarkFaded = step >= 0;
+
   return (
     <>
-      <div className="relative mx-auto w-full max-w-[1600px]">
-        <Image
-          src="/images/hero-banner.png"
-          alt="PROOVE"
-          width={1600}
-          height={900}
-          className="w-full h-[60vh] min-h-[320px] sm:h-[70vh] md:h-auto object-cover"
-          priority
-        />
+      <section ref={storyRef} className="relative h-[500vh]">
+        <div className="sticky top-[72px] md:top-[120px] h-[calc(100vh-72px)] md:h-[calc(100vh-120px)] overflow-hidden">
+          <Scene3D
+            className="absolute inset-0"
+            label="A silver laptop that turns to face you, closes on the locked payment, reopens for delivery and releases the coins as you scroll"
+            poster={<HeroPoster />}
+          >
+            {(active) => (
+              <>
+                {/* wordmark behind the laptop, as in the banner */}
+                <div
+                  aria-hidden
+                  className="pointer-events-none select-none absolute inset-x-0 top-[12%] md:top-[10%] text-center font-semibold lowercase tracking-[-0.04em] text-[#DE5889] transition-opacity duration-700"
+                  style={{ fontSize: "clamp(110px, 25vw, 420px)", lineHeight: 0.9, opacity: wordmarkFaded ? 0.14 : 1, textShadow: "0 0 60px rgba(222,88,137,0.25)" }}
+                >
+                  proove
+                </div>
+                <div className="absolute inset-0">
+                  <HeroLaptop active={active} progress={progress} step={step} steps={STEPS} />
+                </div>
+              </>
+            )}
+          </Scene3D>
 
-        <div className="absolute inset-0 flex flex-col items-center justify-end px-4 pb-8 sm:pb-12 md:pb-16 gap-4">
-          <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 w-full sm:w-auto">
-            <Link href="/role" className="w-full sm:w-auto">
-              <Button size="lg" className="w-full sm:w-auto rounded-full px-8">
-                Start Hiring →
-              </Button>
-            </Link>
-            <Link href="/talent" className="w-full sm:w-auto">
-              <Button size="lg" variant="ghost" className="w-full sm:w-auto rounded-full px-8 border border-white/10">
-                Browse Talent
-              </Button>
-            </Link>
+          <div className="relative h-full max-w-[1440px] mx-auto px-4 sm:px-6 md:px-12 flex flex-col justify-end pb-8 sm:pb-12 md:pb-16 pointer-events-none">
+            <AnimatePresence mode="wait">
+              {step < 0 ? (
+                <motion.div key="hero" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} className="flex flex-col items-center gap-4 pointer-events-auto">
+                  <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 w-full sm:w-auto">
+                    <Link href="/role" className="w-full sm:w-auto">
+                      <Button size="lg" className="w-full sm:w-auto rounded-full px-8">
+                        Start Hiring →
+                      </Button>
+                    </Link>
+                    <Link href="/talent" className="w-full sm:w-auto">
+                      <Button size="lg" variant="ghost" className="w-full sm:w-auto rounded-full px-8 border border-white/10 bg-black/30 backdrop-blur">
+                        Browse Talent
+                      </Button>
+                    </Link>
+                  </div>
+                  <div className="text-[11px] uppercase tracking-widest text-[#71717A]">Scroll to see how the money moves ↓</div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key={step}
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -16 }}
+                  transition={{ duration: 0.35 }}
+                  className="max-w-[440px] rounded-3xl border border-white/10 bg-black/55 backdrop-blur-xl p-6 pointer-events-auto"
+                >
+                  <div className="flex items-center gap-2 mb-3">
+                    {STEPS.map((s, i) => (
+                      <span key={s.eyebrow} className={`h-1 flex-1 rounded-full ${i <= step ? "bg-[#FF6FAF]" : "bg-white/10"}`} />
+                    ))}
+                  </div>
+                  <div className="text-[10px] font-semibold uppercase tracking-widest text-[#FF6FAF] mb-2">
+                    {step + 1} · {STEPS[step].eyebrow}
+                  </div>
+                  <h2 className="text-xl sm:text-2xl font-bold text-white leading-tight">{STEPS[step].title}</h2>
+                  <p className="text-sm text-[#D4D4D8] mt-3 leading-relaxed">{STEPS[step].body}</p>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
-      </div>
+      </section>
 
       <section className="max-w-[1200px] mx-auto px-4 sm:px-6 py-16">
         <LiveStats />
-        <div className="mt-14 mb-8">
-          <div className="text-[10px] font-semibold uppercase tracking-widest text-[#FF6FAF] mb-2">How the money moves</div>
-          <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight max-w-[640px]">
-            Freelance work you can prove: agreed terms, checked deliveries, fair disputes.
-          </h2>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {STEPS.map((s, i) => (
-            <GlassCard key={s.eyebrow}>
-              <div className="text-[10px] font-semibold uppercase tracking-widest text-[#FF6FAF] mb-2">
-                {i + 1} · {s.eyebrow}
-              </div>
-              <div className="text-sm font-semibold text-white mb-2 leading-snug">{s.title}</div>
-              <p className="text-sm text-[#A1A1AA] leading-relaxed">{s.body}</p>
-            </GlassCard>
-          ))}
-        </div>
         <div className="mt-14 mb-8">
           <div className="text-[10px] font-semibold uppercase tracking-widest text-[#FF6FAF] mb-2">What Proove adds</div>
           <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight max-w-[640px]">v1 handled money. Proove adds the trust layer around it.</h2>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {FEATURES.map((f) => (
-            <GlassCard key={f.title} className="hover:border-[#FF6FAF]/40 transition-colors">
+          {FEATURES.map((f, i) => (
+            <GlassCard key={f.title} className="hover:border-[#FF6FAF]/40 transition-colors overflow-hidden">
+              <FeatureScene index={i} />
               <f.icon size={20} className="text-[#FF6FAF] mb-3" />
               <div className="text-sm font-semibold text-white mb-1">{f.title}</div>
               <p className="text-sm text-[#A1A1AA] leading-relaxed">{f.body}</p>

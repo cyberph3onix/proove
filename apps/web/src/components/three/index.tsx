@@ -9,7 +9,8 @@ import dynamic from "next/dynamic";
 
 const none = () => null;
 
-export const HeroVault = dynamic(() => import("./vault-scenes").then((m) => m.HeroVault), { ssr: false, loading: none });
+export const HeroLaptop = dynamic(() => import("./laptop-scenes").then((m) => m.HeroLaptop), { ssr: false, loading: none });
+export const HeroVault =dynamic(() => import("./vault-scenes").then((m) => m.HeroVault), { ssr: false, loading: none });
 export const MiniVaults = dynamic(() => import("./vault-scenes").then((m) => m.MiniVaults), { ssr: false, loading: none });
 export const CoinDropVault = dynamic(() => import("./vault-scenes").then((m) => m.CoinDropVault), { ssr: false, loading: none });
 export const DisputeChamber = dynamic(() => import("./dispute-chamber").then((m) => m.DisputeChamber), { ssr: false, loading: none });
