@@ -1,0 +1,21 @@
+[toolchain]
+package_manager = "pnpm"
+
+[features]
+resolution = true
+skip-lint = false
+
+[programs.devnet]
+gig = "85SttowTEpVzdLhqsVy9YKVBX2DhuwnDicpNqaG38P37"
+escrow = "ekeLPKaiGHb1vSVnCB7BjUeE4EZg5FyVCogMeTu5KQP"
+reputation = "5Tm5aXm3NRzX6fJL3R7NeRbjhZjxTUfJ4nTLurPxdPc6"
+achievement = "ACMSSsuJaZ23xezUbkqjCNBhXCcUGEqfNe2cTZBogkRo"
+
+[provider]
+cluster = "devnet"
+wallet = "~/.config/solana/id.json"
+
+[scripts]
+test = "cargo test --manifest-path programs/gig/Cargo.toml && cargo test --manifest-path programs/escrow/Cargo.toml && cargo test --manifest-path programs/reputation/Cargo.toml && cargo test --manifest-path programs/achievement/Cargo.toml"
+
+[hooks]

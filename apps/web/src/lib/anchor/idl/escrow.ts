@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/escrow.json`.
  */
 export type Escrow = {
-  "address": "7cvNPW6wKmQLVaygQi1cwrSHz1GNLtzQsurENYyfAkd4",
+  "address": "ekeLPKaiGHb1vSVnCB7BjUeE4EZg5FyVCogMeTu5KQP",
   "metadata": {
     "name": "escrow",
     "version": "0.1.0",
@@ -113,7 +113,7 @@ export type Escrow = {
         },
         {
           "name": "gigProgram",
-          "address": "ALa1EKfsHHMefH139SYuSNxd2XbUPj9EN3xRTbPHQNwA"
+          "address": "85SttowTEpVzdLhqsVy9YKVBX2DhuwnDicpNqaG38P37"
         },
         {
           "name": "tokenProgram",
@@ -206,7 +206,7 @@ export type Escrow = {
         },
         {
           "name": "gigProgram",
-          "address": "ALa1EKfsHHMefH139SYuSNxd2XbUPj9EN3xRTbPHQNwA"
+          "address": "85SttowTEpVzdLhqsVy9YKVBX2DhuwnDicpNqaG38P37"
         }
       ],
       "args": []
@@ -457,7 +457,7 @@ export type Escrow = {
         },
         {
           "name": "gigProgram",
-          "address": "ALa1EKfsHHMefH139SYuSNxd2XbUPj9EN3xRTbPHQNwA"
+          "address": "85SttowTEpVzdLhqsVy9YKVBX2DhuwnDicpNqaG38P37"
         },
         {
           "name": "tokenProgram",
@@ -593,7 +593,7 @@ export type Escrow = {
         },
         {
           "name": "gigProgram",
-          "address": "ALa1EKfsHHMefH139SYuSNxd2XbUPj9EN3xRTbPHQNwA"
+          "address": "85SttowTEpVzdLhqsVy9YKVBX2DhuwnDicpNqaG38P37"
         },
         {
           "name": "tokenProgram",
@@ -818,7 +818,7 @@ export type Escrow = {
         },
         {
           "name": "reputationProgram",
-          "address": "HHcJGbKX7fzaPE1UYxqfhGgToDHCDhiWCMawbkumewtt"
+          "address": "5Tm5aXm3NRzX6fJL3R7NeRbjhZjxTUfJ4nTLurPxdPc6"
         },
         {
           "name": "systemProgram",
@@ -975,7 +975,7 @@ export type Escrow = {
         },
         {
           "name": "reputationProgram",
-          "address": "HHcJGbKX7fzaPE1UYxqfhGgToDHCDhiWCMawbkumewtt"
+          "address": "5Tm5aXm3NRzX6fJL3R7NeRbjhZjxTUfJ4nTLurPxdPc6"
         }
       ],
       "args": []

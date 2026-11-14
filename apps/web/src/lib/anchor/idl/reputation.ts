@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/reputation.json`.
  */
 export type Reputation = {
-  "address": "HHcJGbKX7fzaPE1UYxqfhGgToDHCDhiWCMawbkumewtt",
+  "address": "5Tm5aXm3NRzX6fJL3R7NeRbjhZjxTUfJ4nTLurPxdPc6",
   "metadata": {
     "name": "reputation",
     "version": "0.1.0",

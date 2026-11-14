@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/gig.json`.
  */
 export type Gig = {
-  "address": "ALa1EKfsHHMefH139SYuSNxd2XbUPj9EN3xRTbPHQNwA",
+  "address": "85SttowTEpVzdLhqsVy9YKVBX2DhuwnDicpNqaG38P37",
   "metadata": {
     "name": "gig",
     "version": "0.1.0",

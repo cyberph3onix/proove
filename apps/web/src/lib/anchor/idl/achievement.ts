@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/achievement.json`.
  */
 export type Achievement = {
-  "address": "2Eb7JADE5QSWLUYwGGPSc34nUeeTmvaSg23zjcQrRKPG",
+  "address": "ACMSSsuJaZ23xezUbkqjCNBhXCcUGEqfNe2cTZBogkRo",
   "metadata": {
     "name": "achievement",
     "version": "0.1.0",

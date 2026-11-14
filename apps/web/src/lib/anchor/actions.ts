@@ -20,7 +20,7 @@ import {
   type BADGE_TYPE,
 } from "./pdas";
 
-const GIG_PROGRAM_ID = new PublicKey("ALa1EKfsHHMefH139SYuSNxd2XbUPj9EN3xRTbPHQNwA");
+const GIG_PROGRAM_ID = new PublicKey("85SttowTEpVzdLhqsVy9YKVBX2DhuwnDicpNqaG38P37");
 const MPL_CORE_PROGRAM_ID = new PublicKey("CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d");
 
 export interface CreateGigParams {
