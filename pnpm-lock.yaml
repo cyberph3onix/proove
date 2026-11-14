@@ -144,6 +144,19 @@ importers:
         specifier: ^5
         version: 5.9.3
 
+  packages/idl:
+    dependencies:
+      '@proove/config':
+        specifier: workspace:*
+        version: link:../config
+    devDependencies:
+      typescript:
+        specifier: ^5
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.7
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@24.19.2)(jiti@2.7.0)(lightningcss@1.33.0)(supports-color@8.1.1)(terser@5.51.2)(tsx@4.23.15)
+
   packages/storage:
     dependencies:
       '@noble/curves':

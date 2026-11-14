@@ -64,7 +64,7 @@ The working checklist for building the PRD (`Doodle v2 — Product Requirements 
 - [ ] Deploy to devnet with verified builds; record program IDs in `packages/config`.
 
 ### Packages
-- [ ] `packages/idl`: IDLs + generated TS clients (Codama or Anchor TS), with a CI drift check.
+- [x] `packages/idl`: IDLs + generated TS clients (Codama or Anchor TS), with a CI drift check. (Anchor TS types via `scripts/gen-idl.sh`; `pnpm --filter @proove/idl check` is the drift check, to be wired into CI. Regenerate after every program change.)
 - [x] `packages/types`: move `apps/web/src/lib/domain/*` here so services share it.
 - [x] `packages/config`: cluster → RPC URL, program IDs, USDC mint.
 
