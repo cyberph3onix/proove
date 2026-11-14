@@ -271,8 +271,8 @@ fn test_invariant_multiple_milestones() {
     let gig = init_gig(&mut env, id);
     publish_and_assign(&mut env, &gig);
 
-    let amount_a: u64 = 300_000;
-    let amount_b: u64 = 700_000;
+    let amount_a: u64 = 3_000_000;
+    let amount_b: u64 = 7_000_000;
 
     let ms_a = create_milestone_for(&mut env, &gig, 0, amount_a);
     let ms_b = create_milestone_for(&mut env, &gig, 1, amount_b);
@@ -534,8 +534,8 @@ fn test_invariant_holds_through_complex_flow() {
     let gig = init_gig(&mut env, id);
     publish_and_assign(&mut env, &gig);
 
-    let amount_a: u64 = 1000;
-    let amount_b: u64 = 2000;
+    let amount_a: u64 = 1_000_000;
+    let amount_b: u64 = 2_000_000;
 
     let ms_a = create_milestone_for(&mut env, &gig, 0, amount_a);
     let ms_b = create_milestone_for(&mut env, &gig, 1, amount_b);

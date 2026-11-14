@@ -110,10 +110,11 @@ fn approve_after_partial_release_succeeds() {
 /// `full_timeout_release` required `PartialReleased`, that combination left
 /// the funds unreachable by every path once the client went silent.
 #[test]
-fn full_timeout_releases_dust_milestone() {
-    let mut env = setup();
-    // 20% of 4 base units truncates to 0.
-    let s = submitted(&mut env, next_id(), 4);
+fn full_timeout_releases_when_partial_share_is_zero() {
+    // v1 hit a zero partial with a 4-base-unit milestone; the 1 USDC minimum
+    // rules that out, but `partial_bps = 0` reaches the same path.
+    let mut env = setup_with_settings(ProtocolSettings { partial_bps: 0, ..TEST_SETTINGS });
+    let s = submitted(&mut env, next_id(), 4_000_000);
 
     warp_seconds(&mut env.svm, 73 * 3_600);
     let ta = timeout_accounts(&env, &s);
@@ -141,7 +142,7 @@ fn full_timeout_releases_dust_milestone() {
 
     let ms = read_milestone(&env.svm, &s.milestone);
     assert_eq!(ms.status, MilestoneStatus::Completed);
-    assert_eq!(token_balance(&env.svm, &s.freelancer_token_account), 4);
+    assert_eq!(token_balance(&env.svm, &s.freelancer_token_account), 4_000_000);
 }
 
 // ─────────────────────────────────────────────────────

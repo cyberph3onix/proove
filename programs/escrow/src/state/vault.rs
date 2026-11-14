@@ -22,6 +22,13 @@ pub struct EscrowVault {
     /// gig's completion, so the CPI (and its earnings credit) can never fire twice.
     pub reputation_synced: bool,
     pub bump: u8,
+    /// Protocol fees sent to the treasury across this gig's milestones.
+    pub total_fees: u64,
+    /// Amount returned to the client across this gig's milestones.
+    pub total_refunded: u64,
+    /// Milestones closed via `refund_after_deadline`; they count as accounted
+    /// for in settlement, like cancelled ones.
+    pub refunded_milestones: u32,
 }
 
 impl EscrowVault {
@@ -35,5 +42,13 @@ impl EscrowVault {
         + 4 // active_milestone
         + 4 // cancelled_milestones
         + 1 // reputation_synced
-        + 1; // bump
+        + 1 // bump
+        + 8 // total_fees
+        + 8 // total_refunded
+        + 4; // refunded_milestones
+
+    /// Milestones that are closed one way or another (released, cancelled, refunded).
+    pub fn accounted_milestones(&self) -> u64 {
+        self.active_milestone as u64 + self.cancelled_milestones as u64 + self.refunded_milestones as u64
+    }
 }

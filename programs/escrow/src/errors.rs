@@ -24,4 +24,21 @@ pub enum EscrowError {
     InvalidAmount,
     #[msg("Gig must be in Assigned or InProgress status to create/fund a milestone")]
     GigNotFundable,
+    // ── Proove additions (appended so v1 error codes keep their numbers) ──
+    #[msg("Milestone amount is below the protocol minimum")]
+    AmountBelowMinimum,
+    #[msg("The spec hash does not match the milestone's committed spec")]
+    SpecHashMismatch,
+    #[msg("The freelancer has not accepted this milestone's terms yet")]
+    TermsNotAccepted,
+    #[msg("The gig has no assigned freelancer")]
+    NoFreelancer,
+    #[msg("A protocol setting is outside its allowed range")]
+    OutOfRange,
+    #[msg("The no-delivery grace period has not passed yet")]
+    GracePeriodActive,
+    #[msg("Treasury token account does not match the protocol config")]
+    InvalidTreasury,
+    #[msg("A delivery hash is required")]
+    MissingDeliveryHash,
 }

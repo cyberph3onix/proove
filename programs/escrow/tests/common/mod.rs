@@ -13,7 +13,7 @@ use solana_signer::Signer;
 use solana_transaction::versioned::VersionedTransaction;
 use spl_token_interface as spl_token;
 
-pub use escrow::state::{EscrowVault, Milestone, MilestoneStatus};
+pub use escrow::state::{EscrowVault, Milestone, MilestoneStatus, ProtocolConfig, ProtocolSettings};
 pub use gig::state::{Gig, GigStatus};
 pub use reputation::state::UserProfile;
 
@@ -33,9 +33,73 @@ pub struct Env {
     pub client: Keypair,
     pub freelancer: Keypair,
     pub mint: Keypair,
+    /// Holds the `ProtocolConfig` admin role.
+    pub admin: Keypair,
 }
 
-pub fn setup() -> Env {
+/// v1-equivalent terms (72 h / 7 d / 20%, no fee) with the lowest allowed
+/// minimum, so the v1 tests keep their meaning.
+pub const TEST_SETTINGS: ProtocolSettings = ProtocolSettings {
+    partial_timeout: 72 * 3_600,
+    full_timeout: 7 * 86_400,
+    partial_bps: 2_000,
+    fee_bps: 0,
+    min_milestone: 1_000_000,
+    no_delivery_grace: 3 * 86_400,
+};
+
+/// Fixed keypair for the treasury token account, so instruction builders can
+/// reference it without threading it through every test.
+pub fn treasury_keypair() -> Keypair {
+    Keypair::new_from_array([7u8; 32])
+}
+
+pub fn treasury() -> Pubkey {
+    treasury_keypair().pubkey()
+}
+
+pub fn protocol_config_pda() -> (Pubkey, u8) {
+    Pubkey::find_program_address(&[escrow::PROTOCOL_CONFIG_SEED], &escrow::ID)
+}
+
+pub fn read_protocol_config(svm: &LiteSVM) -> ProtocolConfig {
+    let account = svm.get_account(&protocol_config_pda().0).unwrap();
+    ProtocolConfig::try_deserialize(&mut account.data.as_slice()).unwrap()
+}
+
+pub fn ix_init_protocol_config(admin: &Pubkey, treasury: &Pubkey, settings: ProtocolSettings) -> Instruction {
+    Instruction::new_with_bytes(
+        escrow::ID,
+        &escrow::instruction::InitProtocolConfig { settings }.data(),
+        escrow::accounts::InitProtocolConfig {
+            admin: *admin,
+            config: protocol_config_pda().0,
+            treasury: *treasury,
+            system_program: anchor_lang::solana_program::system_program::ID,
+        }
+        .to_account_metas(None),
+    )
+}
+
+pub fn ix_update_protocol_config(admin: &Pubkey, treasury: &Pubkey, settings: ProtocolSettings) -> Instruction {
+    Instruction::new_with_bytes(
+        escrow::ID,
+        &escrow::instruction::UpdateProtocolConfig { settings }.data(),
+        escrow::accounts::UpdateProtocolConfig { admin: *admin, config: protocol_config_pda().0, treasury: *treasury }
+            .to_account_metas(None),
+    )
+}
+
+pub fn ix_set_protocol_admin(admin: &Pubkey, new_admin: Pubkey) -> Instruction {
+    Instruction::new_with_bytes(
+        escrow::ID,
+        &escrow::instruction::SetProtocolAdmin { new_admin }.data(),
+        escrow::accounts::SetProtocolAdmin { admin: *admin, config: protocol_config_pda().0 }.to_account_metas(None),
+    )
+}
+
+/// Setup without the protocol config, for tests of `init_protocol_config` itself.
+pub fn setup_without_config() -> Env {
     let mut svm = LiteSVM::new();
     let escrow_bytes = include_bytes!("../../../../target/deploy/escrow.so");
     svm.add_program(escrow::ID, escrow_bytes).unwrap();
@@ -48,18 +112,37 @@ pub fn setup() -> Env {
     let client = Keypair::new();
     let freelancer = Keypair::new();
     let mint = Keypair::new();
+    let admin = Keypair::new();
 
-    for kp in [&payer, &client, &freelancer] {
+    for kp in [&payer, &client, &freelancer, &admin] {
         svm.airdrop(&kp.pubkey(), 10_000_000_000).unwrap();
     }
 
     create_mint(&mut svm, &payer, &mint, USDC_DECIMALS);
+    create_token_account_at(&mut svm, &payer, &treasury_keypair(), &mint.pubkey(), &admin.pubkey());
 
     let mut clock = svm.get_sysvar::<Clock>();
     clock.unix_timestamp = 1_700_000_000;
     svm.set_sysvar::<Clock>(&clock);
 
-    Env { svm, payer, client, freelancer, mint }
+    Env { svm, payer, client, freelancer, mint, admin }
+}
+
+pub fn setup() -> Env {
+    setup_with_settings(TEST_SETTINGS)
+}
+
+pub fn setup_with_settings(settings: ProtocolSettings) -> Env {
+    let mut env = setup_without_config();
+    let admin = env.admin.pubkey();
+    send(
+        &mut env.svm,
+        &env.payer,
+        &[ix_init_protocol_config(&admin, &treasury(), settings)],
+        &[&env.payer, &env.admin],
+    )
+    .unwrap();
+    env
 }
 
 pub fn send(svm: &mut LiteSVM, payer: &Keypair, ixs: &[Instruction], signers: &[&Keypair]) -> Result<(), String> {
@@ -110,7 +193,10 @@ pub fn create_mint(svm: &mut LiteSVM, payer: &Keypair, mint: &Keypair, decimals:
 }
 
 pub fn create_token_account(svm: &mut LiteSVM, payer: &Keypair, mint: &Pubkey, owner: &Pubkey) -> Pubkey {
-    let account = Keypair::new();
+    create_token_account_at(svm, payer, &Keypair::new(), mint, owner)
+}
+
+pub fn create_token_account_at(svm: &mut LiteSVM, payer: &Keypair, account: &Keypair, mint: &Pubkey, owner: &Pubkey) -> Pubkey {
     let rent = svm.minimum_balance_for_rent_exemption(spl_token::state::Account::LEN);
     let create_ix = system_instruction::create_account(
         &payer.pubkey(),
@@ -121,7 +207,7 @@ pub fn create_token_account(svm: &mut LiteSVM, payer: &Keypair, mint: &Pubkey, o
     );
     let init_ix = spl_token::instruction::initialize_account3(&spl_token::ID, &account.pubkey(), mint, owner)
         .unwrap();
-    send(svm, payer, &[create_ix, init_ix], &[payer, &account]).unwrap();
+    send(svm, payer, &[create_ix, init_ix], &[payer, account]).unwrap();
     account.pubkey()
 }
 
@@ -173,10 +259,12 @@ pub fn verify_vault_invariant(svm: &LiteSVM, vault_key: &Pubkey, vault_token_key
     let vault_balance = token_balance(svm, vault_token_key);
     assert_eq!(
         vault.total_locked,
-        vault.total_released + vault_balance,
-        "vault accounting invariant violated: locked {} != released {} + balance {}",
+        vault.total_released + vault.total_fees + vault.total_refunded + vault_balance,
+        "vault accounting invariant violated: locked {} != released {} + fees {} + refunded {} + balance {}",
         vault.total_locked,
         vault.total_released,
+        vault.total_fees,
+        vault.total_refunded,
         vault_balance,
     );
 }
@@ -403,15 +491,26 @@ pub fn ix_mark_cancelled_by_escrow(escrow_authority: &Pubkey, gig: &Pubkey) -> I
 // ── Escrow instruction builders ──
 
 pub fn ix_create_milestone(client: &Pubkey, gig: &Pubkey, milestone: &Pubkey, amount: u64) -> Instruction {
+    ix_create_milestone_with_spec(client, gig, milestone, amount, [0u8; 32])
+}
+
+pub fn ix_create_milestone_with_spec(
+    client: &Pubkey,
+    gig: &Pubkey,
+    milestone: &Pubkey,
+    amount: u64,
+    spec_hash: [u8; 32],
+) -> Instruction {
     let (vault, _) = vault_pda(gig);
     Instruction::new_with_bytes(
         escrow::ID,
-        &escrow::instruction::CreateMilestone { amount }.data(),
+        &escrow::instruction::CreateMilestone { amount, spec_hash }.data(),
         escrow::accounts::CreateMilestone {
             client: *client,
             gig: *gig,
             vault,
             milestone: *milestone,
+            config: protocol_config_pda().0,
             system_program: anchor_lang::solana_program::system_program::ID,
         }
         .to_account_metas(None),
@@ -441,6 +540,7 @@ pub fn ix_fund_milestone(a: &FundAccounts) -> Instruction {
             vault_token_account: a.vault_token_account,
             client_token_account: a.client_token_account,
             mint: a.mint,
+            config: protocol_config_pda().0,
             escrow_authority,
             gig_program: gig::ID,
             token_program: spl_token::ID,
@@ -450,10 +550,23 @@ pub fn ix_fund_milestone(a: &FundAccounts) -> Instruction {
     )
 }
 
+/// Default delivery manifest hash used by tests that don't care about it.
+pub const TEST_DELIVERY_HASH: [u8; 32] = [0xd1; 32];
+
 pub fn ix_submit_delivery(freelancer: &Pubkey, gig: &Pubkey, milestone: &Pubkey) -> Instruction {
+    ix_submit_delivery_with(freelancer, gig, milestone, TEST_DELIVERY_HASH, [0u8; 32])
+}
+
+pub fn ix_submit_delivery_with(
+    freelancer: &Pubkey,
+    gig: &Pubkey,
+    milestone: &Pubkey,
+    delivery_hash: [u8; 32],
+    report_hash: [u8; 32],
+) -> Instruction {
     Instruction::new_with_bytes(
         escrow::ID,
-        &escrow::instruction::SubmitDelivery {}.data(),
+        &escrow::instruction::SubmitDelivery { delivery_hash, report_hash }.data(),
         escrow::accounts::SubmitDelivery {
             freelancer: *freelancer,
             gig: *gig,
@@ -488,6 +601,8 @@ pub fn ix_approve_milestone(a: &ReleaseAccounts) -> Instruction {
             freelancer: a.freelancer,
             freelancer_token_account: a.freelancer_token_account,
             mint: a.mint,
+            config: protocol_config_pda().0,
+            treasury_token_account: treasury(),
             escrow_authority,
             gig_program: gig::ID,
             token_program: spl_token::ID,
@@ -516,6 +631,8 @@ pub fn ix_partial_timeout_release(a: &TimeoutAccounts) -> Instruction {
             vault_token_account: a.vault_token_account,
             freelancer_token_account: a.freelancer_token_account,
             mint: a.mint,
+            config: protocol_config_pda().0,
+            treasury_token_account: treasury(),
             token_program: spl_token::ID,
         }
         .to_account_metas(None),
@@ -534,6 +651,55 @@ pub fn ix_full_timeout_release(a: &TimeoutAccounts) -> Instruction {
             vault_token_account: a.vault_token_account,
             freelancer_token_account: a.freelancer_token_account,
             mint: a.mint,
+            config: protocol_config_pda().0,
+            treasury_token_account: treasury(),
+            escrow_authority,
+            gig_program: gig::ID,
+            token_program: spl_token::ID,
+        }
+        .to_account_metas(None),
+    )
+}
+
+pub struct AcceptTermsAccounts {
+    pub freelancer: Pubkey,
+    pub gig: Pubkey,
+    pub milestone: Pubkey,
+}
+
+pub fn ix_accept_terms(freelancer: &Pubkey, gig: &Pubkey, milestone: &Pubkey, spec_hash: [u8; 32]) -> Instruction {
+    Instruction::new_with_bytes(
+        escrow::ID,
+        &escrow::instruction::AcceptTerms { spec_hash }.data(),
+        escrow::accounts::AcceptTerms { freelancer: *freelancer, gig: *gig, milestone: *milestone }
+            .to_account_metas(None),
+    )
+}
+
+pub struct RefundAccounts {
+    pub client: Pubkey,
+    pub gig: Pubkey,
+    pub milestone: Pubkey,
+    pub vault: Pubkey,
+    pub vault_token_account: Pubkey,
+    pub client_token_account: Pubkey,
+    pub mint: Pubkey,
+}
+
+pub fn ix_refund_after_deadline(a: &RefundAccounts) -> Instruction {
+    let (escrow_authority, _) = escrow_authority_pda();
+    Instruction::new_with_bytes(
+        escrow::ID,
+        &escrow::instruction::RefundAfterDeadline {}.data(),
+        escrow::accounts::RefundAfterDeadline {
+            client: a.client,
+            gig: a.gig,
+            milestone: a.milestone,
+            vault: a.vault,
+            vault_token_account: a.vault_token_account,
+            client_token_account: a.client_token_account,
+            mint: a.mint,
+            config: protocol_config_pda().0,
             escrow_authority,
             gig_program: gig::ID,
             token_program: spl_token::ID,
@@ -706,4 +872,18 @@ pub fn create_funded_milestone(env: &mut Env, gig_id: u64, amount: u64) -> Setup
         client_token_account,
         freelancer_token_account,
     }
+}
+
+/// Per-milestone invariant from the PRD: released + refunded + fees + locked = amount.
+pub fn assert_milestone_invariant(svm: &LiteSVM, milestone: &Pubkey) {
+    let m = read_milestone(svm, milestone);
+    let locked = m.locked().expect("milestone accounting underflow");
+    assert_eq!(m.released + m.refunded + m.fees_paid + locked, m.amount, "milestone invariant violated: {m:?}");
+}
+
+/// Anchor custom error codes start at 6000; tests match on the hex form.
+pub fn assert_escrow_err(result: Result<(), String>, error: escrow::EscrowError) {
+    let code = 6000 + error as u32;
+    let err = result.expect_err("expected the instruction to fail");
+    assert!(err.contains(&format!("{code:#x}")), "expected {error:?} ({code:#x}), got: {err}");
 }

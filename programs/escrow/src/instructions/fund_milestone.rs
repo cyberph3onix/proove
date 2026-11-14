@@ -3,10 +3,10 @@ use anchor_spl::token::{self, Token, TokenAccount, Mint, TransferChecked};
 use gig::cpi::accounts::MarkInProgress;
 use gig::{Gig, GigStatus};
 
-use crate::constants::{ESCROW_AUTHORITY_SEED, VAULT_SEED};
+use crate::constants::{ESCROW_AUTHORITY_SEED, PROTOCOL_CONFIG_SEED, VAULT_SEED};
 use crate::errors::EscrowError;
 use crate::events::MilestoneFunded;
-use crate::state::{EscrowVault, Milestone, MilestoneStatus};
+use crate::state::{EscrowVault, Milestone, MilestoneStatus, ProtocolConfig};
 use crate::utils::checked_add;
 
 #[derive(Accounts)]
@@ -27,8 +27,10 @@ pub struct FundMilestone<'info> {
         mut,
         constraint = milestone.gig == gig.key() @ EscrowError::Unauthorized,
         constraint = milestone.status == MilestoneStatus::PendingFunding @ EscrowError::AlreadyFunded,
+        constraint = milestone.spec_hash == [0u8; 32] || milestone.terms_accepted
+            @ EscrowError::TermsNotAccepted,
     )]
-    pub milestone: Account<'info, Milestone>,
+    pub milestone: Box<Account<'info, Milestone>>,
 
     #[account(
         mut,
@@ -55,6 +57,9 @@ pub struct FundMilestone<'info> {
     pub client_token_account: Account<'info, TokenAccount>,
 
     pub mint: Account<'info, Mint>,
+
+    #[account(seeds = [PROTOCOL_CONFIG_SEED], bump = config.bump)]
+    pub config: Box<Account<'info, ProtocolConfig>>,
 
     /// CHECK: PDA identity only; used purely as escrow's CPI-signer into the gig program.
     #[account(seeds = [ESCROW_AUTHORITY_SEED], bump)]
@@ -94,8 +99,16 @@ pub fn handler(ctx: Context<FundMilestone>) -> Result<()> {
     }
     vault.total_locked = checked_add(vault.total_locked, amount)?;
 
+    // Snapshot the protocol terms: later config changes (e.g. a DAO vote)
+    // only apply to milestones funded afterwards.
+    let config = &ctx.accounts.config;
     let milestone = &mut ctx.accounts.milestone;
     milestone.status = MilestoneStatus::Funded;
+    milestone.funded_at = Clock::get()?.unix_timestamp;
+    milestone.partial_timeout = config.partial_timeout;
+    milestone.full_timeout = config.full_timeout;
+    milestone.partial_bps = config.partial_bps;
+    milestone.fee_bps = config.fee_bps;
 
     emit!(MilestoneFunded {
         gig: ctx.accounts.gig.key(),

@@ -20,7 +20,14 @@ pub struct SubmitDelivery<'info> {
 }
 
 /// Records the freelancer's delivery submission and starts the timeout clocks.
-pub fn handler(ctx: Context<SubmitDelivery>) -> Result<()> {
+/// `delivery_hash` is the canonical delivery manifest hash; `report_hash` the
+/// verification report's (zero if none). `submitted_slot` seeds the sample audit.
+pub fn handler(
+    ctx: Context<SubmitDelivery>,
+    delivery_hash: [u8; 32],
+    report_hash: [u8; 32],
+) -> Result<()> {
+    require!(delivery_hash != [0u8; 32], EscrowError::MissingDeliveryHash);
     require!(
         ctx.accounts.milestone.status != MilestoneStatus::Submitted,
         EscrowError::MilestoneAlreadySubmitted
@@ -30,16 +37,23 @@ pub fn handler(ctx: Context<SubmitDelivery>) -> Result<()> {
         EscrowError::InvalidStatus
     );
 
-    let now = Clock::get()?.unix_timestamp;
+    let clock = Clock::get()?;
+    let now = clock.unix_timestamp;
 
     let milestone = &mut ctx.accounts.milestone;
     milestone.submitted_at = now;
     milestone.status = MilestoneStatus::Submitted;
+    milestone.submitted_slot = clock.slot;
+    milestone.delivery_hash = delivery_hash;
+    milestone.report_hash = report_hash;
 
     emit!(DeliverySubmitted {
         gig: ctx.accounts.gig.key(),
         milestone: milestone.key(),
         submitted_at: now,
+        submitted_slot: clock.slot,
+        delivery_hash,
+        report_hash,
     });
 
     Ok(())

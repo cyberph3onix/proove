@@ -27,12 +27,14 @@ fn test_milestone_amount_zero() {
 }
 
 #[test]
-fn test_milestone_amount_one() {
+// The 1 USDC protocol minimum replaced v1's 1-base-unit edge case;
+// smaller milestones are rejected (see protocol_config.rs).
+fn test_milestone_amount_at_minimum() {
     let mut env = setup();
     let gig_id = next_id();
     let gig = init_gig(&mut env, gig_id);
     publish_and_assign(&mut env, &gig);
-    let milestone = create_milestone_for(&mut env, &gig, 0, 1);
+    let milestone = create_milestone_for(&mut env, &gig, 0, MIN);
 
     let (vault, _) = vault_pda(&gig);
     let (vault_token_key, _) = vault_token_pda(&gig);
@@ -41,7 +43,7 @@ fn test_milestone_amount_one() {
     let freelancer_token =
         create_token_account(&mut env.svm, &env.payer, &env.mint.pubkey(), &env.freelancer.pubkey());
 
-    mint_to(&mut env.svm, &env.payer, &env.mint.pubkey(), &env.payer, &client_token, 1);
+    mint_to(&mut env.svm, &env.payer, &env.mint.pubkey(), &env.payer, &client_token, MIN);
 
     send(
         &mut env.svm,
@@ -84,7 +86,7 @@ fn test_milestone_amount_one() {
     )
     .unwrap();
 
-    assert_eq!(token_balance(&env.svm, &freelancer_token), 1);
+    assert_eq!(token_balance(&env.svm, &freelancer_token), MIN);
     assert_eq!(token_balance(&env.svm, &vault_token_key), 0);
     verify_vault_invariant(&env.svm, &vault, &vault_token_key);
 }
@@ -341,7 +343,8 @@ fn test_exact_accounting_after_many_operations() {
     let gig = init_gig(&mut env, gig_id);
     publish_and_assign(&mut env, &gig);
 
-    let amounts = [100u64, 200, 300, 400, 500];
+    // Scaled from v1's [100..500] base units to clear the 1 USDC minimum.
+    let amounts = [1_000_100u64, 2_000_200, 3_000_300, 4_000_400, 5_000_500];
     let mut milestones = Vec::new();
     for (i, &amount) in amounts.iter().enumerate() {
         let m = create_milestone_for(&mut env, &gig, i as u32, amount);
@@ -426,3 +429,5 @@ fn test_exact_accounting_after_many_operations() {
     let gig_state = read_gig(&env.svm, &gig);
     assert_eq!(gig_state.status, GigStatus::Completed);
 }
+
+const MIN: u64 = TEST_SETTINGS.min_milestone;

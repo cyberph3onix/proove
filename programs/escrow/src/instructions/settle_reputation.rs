@@ -21,8 +21,7 @@ pub struct SettleReputation<'info> {
         // meant a single cancelled milestone left this constraint permanently
         // unsatisfiable, silently blocking settlement and rating for the gig.
         constraint = vault.milestone_count > 0
-            && vault.active_milestone.saturating_add(vault.cancelled_milestones)
-                >= vault.milestone_count
+            && vault.accounted_milestones() >= vault.milestone_count as u64
             @ EscrowError::InvalidStatus,
         constraint = !vault.reputation_synced @ EscrowError::InvalidStatus,
     )]

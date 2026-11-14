@@ -1,18 +1,18 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Token, TokenAccount, Mint, TransferChecked};
+use anchor_spl::token::{Mint, Token, TokenAccount};
 use gig::cpi::accounts::MarkCompletedByEscrow;
 use gig::Gig;
 
-use crate::constants::{ESCROW_AUTHORITY_SEED, FULL_TIMEOUT, VAULT_SEED};
+use crate::constants::{ESCROW_AUTHORITY_SEED, PROTOCOL_CONFIG_SEED, VAULT_SEED};
 use crate::errors::EscrowError;
-use crate::events::FullReleaseExecuted;
-use crate::state::{EscrowVault, Milestone, MilestoneStatus};
-use crate::utils::{checked_add, checked_sub};
+use crate::events::{FullReleaseExecuted, ProtocolFeeCollected};
+use crate::state::{EscrowVault, Milestone, MilestoneStatus, ProtocolConfig};
+use crate::utils::{checked_add, split_fee, vault_transfer};
 
 #[derive(Accounts)]
 pub struct FullTimeoutRelease<'info> {
     #[account(mut)]
-    pub gig: Account<'info, Gig>,
+    pub gig: Box<Account<'info, Gig>>,
 
     #[account(
         mut,
@@ -27,7 +27,7 @@ pub struct FullTimeoutRelease<'info> {
             || milestone.status == MilestoneStatus::PartialReleased
             @ EscrowError::InvalidStatus,
     )]
-    pub milestone: Account<'info, Milestone>,
+    pub milestone: Box<Account<'info, Milestone>>,
 
     #[account(
         mut,
@@ -49,6 +49,17 @@ pub struct FullTimeoutRelease<'info> {
 
     pub mint: Account<'info, Mint>,
 
+    #[account(seeds = [PROTOCOL_CONFIG_SEED], bump = config.bump)]
+    pub config: Box<Account<'info, ProtocolConfig>>,
+
+    /// Receives the protocol fee.
+    #[account(
+        mut,
+        address = config.treasury @ EscrowError::InvalidTreasury,
+        constraint = treasury_token_account.mint == mint.key() @ EscrowError::InvalidMint,
+    )]
+    pub treasury_token_account: Box<Account<'info, TokenAccount>>,
+
     /// CHECK: PDA identity only; used purely as escrow's CPI-signer into the gig program.
     #[account(seeds = [ESCROW_AUTHORITY_SEED], bump)]
     pub escrow_authority: UncheckedAccount<'info>,
@@ -64,54 +75,48 @@ pub struct FullTimeoutRelease<'info> {
 pub fn handler(ctx: Context<FullTimeoutRelease>) -> Result<()> {
     let now = Clock::get()?.unix_timestamp;
     let milestone = &ctx.accounts.milestone;
-
     require!(
-        now >= milestone.submitted_at.saturating_add(FULL_TIMEOUT),
+        now >= milestone.submitted_at.saturating_add(milestone.full_timeout),
         EscrowError::TimeoutNotReached
     );
-
-    let remaining = checked_sub(milestone.amount, milestone.released)?;
+    let remaining = milestone.locked().ok_or_else(|| error!(EscrowError::MathError))?;
     require!(remaining > 0, EscrowError::InsufficientFunds);
 
     let gig_key = ctx.accounts.gig.key();
-    let vault_bump = ctx.accounts.vault.bump;
-    let vault_signer_seeds: &[&[&[u8]]] = &[&[VAULT_SEED, gig_key.as_ref(), &[vault_bump]]];
-
-    token::transfer_checked(
-        CpiContext::new_with_signer(
-            ctx.accounts.token_program.key(),
-            TransferChecked {
-                from: ctx.accounts.vault_token_account.to_account_info(),
-                mint: ctx.accounts.mint.to_account_info(),
-                to: ctx.accounts.freelancer_token_account.to_account_info(),
-                authority: ctx.accounts.vault.to_account_info(),
-            },
-            vault_signer_seeds,
-        ),
-        remaining,
-        ctx.accounts.mint.decimals,
-    )?;
+    let (net, fee) = split_fee(remaining, ctx.accounts.milestone.fee_bps)?;
+    let token_program = ctx.accounts.token_program.to_account_info();
+    let vault_token = ctx.accounts.vault_token_account.to_account_info();
+    let mint = ctx.accounts.mint.to_account_info();
+    let vault_info = ctx.accounts.vault.to_account_info();
+    let (bump, decimals) = (ctx.accounts.vault.bump, ctx.accounts.mint.decimals);
+    vault_transfer(&token_program, &vault_token, &mint,
+        &ctx.accounts.freelancer_token_account.to_account_info(), &vault_info, &gig_key, bump, net, decimals)?;
+    vault_transfer(&token_program, &vault_token, &mint,
+        &ctx.accounts.treasury_token_account.to_account_info(), &vault_info, &gig_key, bump, fee, decimals)?;
 
     let vault = &mut ctx.accounts.vault;
-    vault.total_released = checked_add(vault.total_released, remaining)?;
+    vault.total_released = checked_add(vault.total_released, net)?;
+    vault.total_fees = checked_add(vault.total_fees, fee)?;
 
     let milestone = &mut ctx.accounts.milestone;
-    milestone.released = checked_add(milestone.released, remaining)?;
+    milestone.released = checked_add(milestone.released, net)?;
+    milestone.fees_paid = checked_add(milestone.fees_paid, fee)?;
+    milestone.approved_at = now;
     milestone.status = MilestoneStatus::Completed;
 
-    // Mirrors `approve_milestone`: cancelled milestones are accounted for, so a
-    // gig with a cancelled milestone can still reach Completed.
-    let is_last_milestone = checked_add(
-        checked_add(vault.active_milestone as u64, 1)?,
-        vault.cancelled_milestones as u64,
-    )? as u32
-        >= vault.milestone_count;
+    // Mirrors `approve_milestone`.
+    let vault = &mut ctx.accounts.vault;
+    let is_last_milestone = vault.accounted_milestones() + 1 >= vault.milestone_count as u64;
     vault.active_milestone = checked_add(vault.active_milestone as u64, 1)? as u32;
+    let milestone = &ctx.accounts.milestone;
+    if fee > 0 {
+        emit!(ProtocolFeeCollected { gig: gig_key, milestone: milestone.key(), amount: fee });
+    }
 
     emit!(FullReleaseExecuted {
         gig: gig_key,
         milestone: milestone.key(),
-        amount_released: remaining,
+        amount_released: net,
     });
 
     if is_last_milestone {

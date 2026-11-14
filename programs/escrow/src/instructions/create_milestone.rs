@@ -1,10 +1,10 @@
 use anchor_lang::prelude::*;
 use gig::{Gig, GigStatus};
 
-use crate::constants::{MILESTONE_SEED, VAULT_SEED};
+use crate::constants::{MILESTONE_SEED, PROTOCOL_CONFIG_SEED, VAULT_SEED};
 use crate::errors::EscrowError;
 use crate::events::MilestoneCreated;
-use crate::state::{EscrowVault, Milestone, MilestoneStatus};
+use crate::state::{EscrowVault, Milestone, MilestoneStatus, ProtocolConfig};
 use crate::utils::checked_add;
 
 #[derive(Accounts)]
@@ -43,12 +43,18 @@ pub struct CreateMilestone<'info> {
     )]
     pub milestone: Account<'info, Milestone>,
 
+    #[account(seeds = [PROTOCOL_CONFIG_SEED], bump = config.bump)]
+    pub config: Account<'info, ProtocolConfig>,
+
     pub system_program: Program<'info, System>,
 }
 
 /// Creates the next sequential Milestone PDA for `gig`, awaiting funding.
-pub fn handler(ctx: Context<CreateMilestone>, amount: u64) -> Result<()> {
+/// `spec_hash` commits the AI-compiled (and client-edited) milestone spec;
+/// zero means no spec, which skips the `accept_terms` requirement at funding.
+pub fn handler(ctx: Context<CreateMilestone>, amount: u64, spec_hash: [u8; 32]) -> Result<()> {
     require!(amount > 0, EscrowError::InvalidAmount);
+    require!(amount >= ctx.accounts.config.min_milestone, EscrowError::AmountBelowMinimum);
 
     let vault = &mut ctx.accounts.vault;
     if vault.gig == Pubkey::default() {
@@ -66,6 +72,8 @@ pub fn handler(ctx: Context<CreateMilestone>, amount: u64) -> Result<()> {
     milestone.submitted_at = 0;
     milestone.approved_at = 0;
     milestone.bump = ctx.bumps.milestone;
+    milestone.spec_hash = spec_hash;
+    milestone.terms_accepted = false;
 
     vault.milestone_count = checked_add(vault.milestone_count as u64, 1)? as u32;
 
@@ -74,6 +82,7 @@ pub fn handler(ctx: Context<CreateMilestone>, amount: u64) -> Result<()> {
         milestone: milestone.key(),
         index,
         amount,
+        spec_hash,
     });
 
     Ok(())

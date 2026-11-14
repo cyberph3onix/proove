@@ -52,11 +52,11 @@ The working checklist for building the PRD (`Doodle v2 — Product Requirements 
 ### Programs (port v1 into `programs/`, then make the additive changes)
 - [x] Copy v1's `programs/{gig,escrow,reputation,achievement}`, `Anchor.toml`, `Cargo.toml` and the tests. Generate new program keypairs and update the `ESCROW_PROGRAM_ID` constants and compile-time assertions. All v1 tests pass unchanged (269 in `cargo test`; the earlier "351+" figure counted differently).
 - [ ] `security_txt!` in every program; `solana-verify build` works locally.
-- [ ] New `protocol_config` account (owned by escrow, or a small `config` program; decide and note it here). Holds `partialTimeout`, `fullTimeout`, `partialBps`, `feeBps`, `minMilestone`, `noDeliveryGrace`, with the ranges from `apps/web/src/lib/mock/ranges.ts` enforced in code. Admin is an upgrade-authority-held key until Phase 2 moves it to the DAO.
-- [ ] Escrow `Milestone` gains `spec_hash`, `delivery_hash`, `report_hash`, `terms_accepted`, `submitted_slot`, snapshotted terms, `fees_paid`, `refunded`. `create_milestone(amount, spec_hash)`; `submit_delivery(delivery_hash, report_hash)`.
-- [ ] `accept_terms` (freelancer signs, must match `spec_hash`); `fund_milestone` requires it when `spec_hash ≠ 0`; `MIN_MILESTONE_AMOUNT` from config.
-- [ ] Protocol fee on every release path (approve, partial, full), sent to the treasury token account.
-- [ ] `refund_after_deadline` (client; Funded, after gig deadline + grace).
+- [x] New `protocol_config` account (owned by escrow, or a small `config` program; decide and note it here). **Decided: a PDA owned by escrow** (`[b"protocol_config"]`), with `init_protocol_config` (first caller becomes admin, so the deploy script runs it straight away), `update_protocol_config`, `set_protocol_admin` (DAO handoff) and a `treasury` token account. Also enforces `full_timeout >= partial_timeout`, which the mock doesn't. Holds `partialTimeout`, `fullTimeout`, `partialBps`, `feeBps`, `minMilestone`, `noDeliveryGrace`, with the ranges from `apps/web/src/lib/mock/ranges.ts` enforced in code. Admin is an upgrade-authority-held key until Phase 2 moves it to the DAO.
+- [x] Escrow `Milestone` gains `spec_hash`, `delivery_hash`, `report_hash`, `terms_accepted`, `submitted_slot`, snapshotted terms, `fees_paid`, `refunded`. `create_milestone(amount, spec_hash)`; `submit_delivery(delivery_hash, report_hash)`.
+- [x] `accept_terms` (freelancer signs, must match `spec_hash`); `fund_milestone` requires it when `spec_hash ≠ 0`; `MIN_MILESTONE_AMOUNT` from config.
+- [x] Protocol fee on every release path (approve, partial, full), sent to the treasury token account.
+- [x] `refund_after_deadline` (client; Funded, after gig deadline + grace). When every milestone is closed, the gig becomes Completed if anything was paid, otherwise Cancelled. Not ported yet: the mock's `ExceedsBudget` check (milestone total ≤ gig budget) in `create_milestone`.
 - [ ] Reputation: `update_completion(delivered_on_time, disputed_outcome)`, counters `on_time_jobs`, `disputes_won`, `disputes_lost`; `FastDeliverer` and `TrustedFreelancer` made awardable (thresholds as in `apps/web/src/lib/domain/reputation.ts`).
 - [ ] Achievement: mint with the Metaplex Core permanent freeze plugin.
 - [ ] Gig: `GigStatus::Disputed` (escrow-signed only). Unused until Phase 2 but added now to keep the layout stable.

@@ -354,7 +354,7 @@ fn test_multiple_milestones_full_approve() {
     let gig_key = init_gig(&mut env, gig_id);
     publish_and_assign(&mut env, &gig_key);
 
-    let amounts = [100_000u64, 200_000u64, 300_000u64];
+    let amounts = [1_000_000u64, 2_000_000u64, 3_000_000u64];
     let mut milestones: Vec<Pubkey> = Vec::new();
     for (i, &amount) in amounts.iter().enumerate() {
         let m = create_milestone_for(&mut env, &gig_key, i as u32, amount);

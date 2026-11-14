@@ -15,13 +15,34 @@ pub use state::*;
 
 declare_id!("ekeLPKaiGHb1vSVnCB7BjUeE4EZg5FyVCogMeTu5KQP");
 
+#[cfg(not(feature = "no-entrypoint"))]
+solana_security_txt::security_txt! {
+    name: "Proove Escrow",
+    project_url: "https://github.com/cyberph3onix/proove",
+    contacts: "link:https://github.com/cyberph3onix/proove/security/advisories/new",
+    policy: "https://github.com/cyberph3onix/proove/blob/main/SECURITY.md",
+    preferred_languages: "en",
+    source_code: "https://github.com/cyberph3onix/proove",
+    source_release: env!("CARGO_PKG_VERSION"),
+    auditors: "None"
+}
+
 #[program]
 pub mod escrow {
     use super::*;
 
     /// Creates the next milestone for a gig, awaiting funding.
-    pub fn create_milestone(ctx: Context<CreateMilestone>, amount: u64) -> Result<()> {
-        create_milestone::handler(ctx, amount)
+    pub fn create_milestone(
+        ctx: Context<CreateMilestone>,
+        amount: u64,
+        spec_hash: [u8; 32],
+    ) -> Result<()> {
+        create_milestone::handler(ctx, amount, spec_hash)
+    }
+
+    /// Freelancer signs the milestone's committed spec hash before funding.
+    pub fn accept_terms(ctx: Context<AcceptTerms>, spec_hash: [u8; 32]) -> Result<()> {
+        accept_terms::handler(ctx, spec_hash)
     }
 
     /// Funds a milestone by transferring USDC from the client into the escrow vault.
@@ -31,8 +52,12 @@ pub mod escrow {
     }
 
     /// Records the freelancer's delivery submission.
-    pub fn submit_delivery(ctx: Context<SubmitDelivery>) -> Result<()> {
-        submit_delivery::handler(ctx)
+    pub fn submit_delivery(
+        ctx: Context<SubmitDelivery>,
+        delivery_hash: [u8; 32],
+        report_hash: [u8; 32],
+    ) -> Result<()> {
+        submit_delivery::handler(ctx, delivery_hash, report_hash)
     }
 
     /// Client-approved release of the full remaining milestone balance.
@@ -40,12 +65,12 @@ pub mod escrow {
         approve_milestone::handler(ctx)
     }
 
-    /// Permissionless 20% release after 72 hours of client inaction.
+    /// Permissionless partial release (`partial_bps`) after `partial_timeout` of client inaction.
     pub fn partial_timeout_release(ctx: Context<PartialTimeoutRelease>) -> Result<()> {
         partial_timeout_release::handler(ctx)
     }
 
-    /// Permissionless release of the remaining balance after 7 days of client inaction.
+    /// Permissionless release of the remaining balance after `full_timeout` of client inaction.
     pub fn full_timeout_release(ctx: Context<FullTimeoutRelease>) -> Result<()> {
         full_timeout_release::handler(ctx)
     }
@@ -68,5 +93,31 @@ pub mod escrow {
     /// fully released. Callable exactly once per gig.
     pub fn settle_reputation(ctx: Context<SettleReputation>) -> Result<()> {
         settle_reputation::handler(ctx)
+    }
+
+    /// Client reclaims a funded milestone with no delivery after deadline + grace.
+    pub fn refund_after_deadline(ctx: Context<RefundAfterDeadline>) -> Result<()> {
+        refund_after_deadline::handler(ctx)
+    }
+
+    /// One-time setup of the protocol config (first caller becomes admin).
+    pub fn init_protocol_config(
+        ctx: Context<InitProtocolConfig>,
+        settings: ProtocolSettings,
+    ) -> Result<()> {
+        config_admin::init_handler(ctx, settings)
+    }
+
+    /// Admin updates protocol settings; every value is range-checked.
+    pub fn update_protocol_config(
+        ctx: Context<UpdateProtocolConfig>,
+        settings: ProtocolSettings,
+    ) -> Result<()> {
+        config_admin::update_handler(ctx, settings)
+    }
+
+    /// Admin hands the config to a new admin (the DAO in Phase 2).
+    pub fn set_protocol_admin(ctx: Context<SetProtocolAdmin>, new_admin: Pubkey) -> Result<()> {
+        config_admin::set_admin_handler(ctx, new_admin)
     }
 }
