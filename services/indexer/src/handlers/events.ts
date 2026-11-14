@@ -77,6 +77,8 @@ const gigHandlers: Record<string, EventHandler> = {
   GigCompleted: gigStatus("completed", "is complete: every milestone has settled"),
   GigArchived: gigStatus("archived", "was archived"),
   GigCancelled: gigStatus("cancelled", "was cancelled before any funds were locked"),
+  GigDisputed: gigStatus("disputed", "is frozen by an open dispute"),
+  GigDisputeCleared: gigStatus("inProgress", "is back in progress: its dispute was resolved"),
 };
 
 const milestone = (d: PlainRecord, set: Mutation["set"], inc?: Mutation["inc"]): Mutation => ({
