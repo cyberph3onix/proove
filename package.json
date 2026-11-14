@@ -1,0 +1,9 @@
+{
+  "name": "proove",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --filter @proove/web dev",
+    "build": "pnpm --filter @proove/web build",
+    "lint": "pnpm --filter @proove/web lint"
+  }
+}
