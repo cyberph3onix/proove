@@ -71,7 +71,7 @@ The working checklist for building the PRD (`Doodle v2 — Product Requirements 
 ### Services
 - [ ] `services/indexer`: decode program events, write Postgres (Docker compose in `infrastructure/`). APIs: gig search (full text plus category, budget, skill), gig and milestone detail, activity feed, `GET /v1/reputation/{wallet}` with account + slot for every value.
 - [ ] `services/keeper`: every 5 min sends due `partial_timeout_release`, `full_timeout_release` and `settle_reputation`. Idempotent; anyone can run it.
-- [ ] `services/ai`: Scope Compiler and Delivery Verifier on Gemini with structured output, `store=false`, the prompt-hash allow-list (static file until the Phase 2 `AiRegistry`), logs that hold hashes only, the injection test suite, per-wallet rate limits and the 200 MB cap.
+- [x] `services/ai`: Scope Compiler and Delivery Verifier on Gemini with structured output, `store=false`, the prompt-hash allow-list (static file until the Phase 2 `AiRegistry`), logs that hold hashes only, the injection test suite, per-wallet rate limits and the 200 MB cap. (Runs on a fake model until `GEMINI_API_KEY` is set. Not done: authenticating the `x-proove-wallet` header, the Gemini Files API for large files, and moving `ScopeResult` into `@proove/types`.)
 - [x] Storage: browser-side AES-256-GCM encryption, upload via Irys, delivery manifest hash. Key wrapping for client and freelancer. (`packages/storage`; Irys uploads still need a funded wallet, and the delivery modal isn't wired yet.)
 - [x] Random sample audit: seed from `SlotHashes` at `submitted_slot + 2`; anyone can recompute the sample. (`packages/storage`. The seed is only on-chain for ~512 slots, so the report records it; a follow-up could store it on the milestone.)
 
