@@ -57,3 +57,15 @@ pub struct GigCancelled {
     pub gig: Pubkey,
     pub id: u64,
 }
+
+#[event]
+pub struct GigDisputed {
+    pub gig: Pubkey,
+    pub id: u64,
+}
+
+#[event]
+pub struct GigDisputeCleared {
+    pub gig: Pubkey,
+    pub id: u64,
+}

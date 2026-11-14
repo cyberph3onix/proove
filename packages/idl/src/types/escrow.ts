@@ -2131,6 +2131,9 @@ export type Escrow = {
           },
           {
             "name": "archived"
+          },
+          {
+            "name": "disputed"
           }
         ]
       }

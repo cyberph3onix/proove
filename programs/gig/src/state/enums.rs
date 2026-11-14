@@ -10,4 +10,7 @@ pub enum GigStatus {
     Completed,
     Cancelled,
     Archived,
+    /// Appended in Proove (v1 discriminants unchanged). Entered and left only
+    /// via escrow CPI while a milestone is frozen by a dispute (Phase 2).
+    Disputed,
 }

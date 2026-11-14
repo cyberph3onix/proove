@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 use mpl_core::instructions::CreateV2CpiBuilder;
-use mpl_core::types::DataState;
+use mpl_core::types::{DataState, PermanentFreezeDelegate, Plugin, PluginAuthority, PluginAuthorityPair};
 use reputation::{Badge, BadgeType, UserProfile};
 
 use crate::constants::{badge_name, badge_uri, ACHIEVEMENT_SEED, CONFIG_SEED};
@@ -82,6 +82,13 @@ pub fn handler(ctx: Context<ClaimAchievement>, badge_type: BadgeType) -> Result<
         .owner(Some(&ctx.accounts.claimer.to_account_info()))
         .system_program(&ctx.accounts.system_program.to_account_info())
         .data_state(DataState::AccountState)
+        // Soulbound: frozen from birth, and with no plugin authority nobody
+        // (not the owner, not the update authority) can ever thaw it, so the
+        // badge can't be transferred or sold.
+        .plugins(vec![PluginAuthorityPair {
+            plugin: Plugin::PermanentFreezeDelegate(PermanentFreezeDelegate { frozen: true }),
+            authority: Some(PluginAuthority::None),
+        }])
         .name(badge_name(badge_type).to_string())
         .uri(badge_uri(&ctx.accounts.config.base_uri, badge_type))
         .invoke_signed(config_signer_seeds)?;

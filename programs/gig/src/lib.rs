@@ -86,6 +86,16 @@ pub mod gig {
         mark_in_progress::handler(ctx)
     }
 
+    /// Escrow-only (CPI): InProgress -> Disputed when a dispute opens (Phase 2).
+    pub fn mark_disputed_by_escrow(ctx: Context<MarkDisputedByEscrow>) -> Result<()> {
+        mark_disputed_by_escrow::handler(ctx)
+    }
+
+    /// Escrow-only (CPI): Disputed -> InProgress when the last dispute closes (Phase 2).
+    pub fn clear_dispute_by_escrow(ctx: Context<ClearDisputeByEscrow>) -> Result<()> {
+        clear_dispute_by_escrow::handler(ctx)
+    }
+
     /// CPI-only: escrow signals its final milestone release, moving InProgress -> Completed.
     pub fn mark_completed_by_escrow(ctx: Context<MarkCompletedByEscrow>) -> Result<()> {
         mark_completed_by_escrow::handler(ctx)

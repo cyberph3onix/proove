@@ -110,6 +110,95 @@ export type Gig = {
       "args": []
     },
     {
+      "name": "clearDisputeByEscrow",
+      "docs": [
+        "Escrow-only (CPI): Disputed -> InProgress when the last dispute closes (Phase 2)."
+      ],
+      "discriminator": [
+        3,
+        249,
+        185,
+        176,
+        154,
+        255,
+        129,
+        50
+      ],
+      "accounts": [
+        {
+          "name": "escrowAuthority",
+          "signer": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                9,
+                171,
+                214,
+                136,
+                77,
+                97,
+                135,
+                178,
+                191,
+                149,
+                228,
+                128,
+                226,
+                11,
+                227,
+                123,
+                15,
+                198,
+                5,
+                248,
+                231,
+                97,
+                234,
+                93,
+                145,
+                208,
+                118,
+                44,
+                131,
+                219,
+                236,
+                52
+              ]
+            }
+          }
+        },
+        {
+          "name": "gig",
+          "writable": true
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "completeGig",
       "docs": [
         "Manual completion path for gigs that never entered escrow."
@@ -323,6 +412,95 @@ export type Gig = {
         152,
         42,
         91
+      ],
+      "accounts": [
+        {
+          "name": "escrowAuthority",
+          "signer": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                9,
+                171,
+                214,
+                136,
+                77,
+                97,
+                135,
+                178,
+                191,
+                149,
+                228,
+                128,
+                226,
+                11,
+                227,
+                123,
+                15,
+                198,
+                5,
+                248,
+                231,
+                97,
+                234,
+                93,
+                145,
+                208,
+                118,
+                44,
+                131,
+                219,
+                236,
+                52
+              ]
+            }
+          }
+        },
+        {
+          "name": "gig",
+          "writable": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "markDisputedByEscrow",
+      "docs": [
+        "Escrow-only (CPI): InProgress -> Disputed when a dispute opens (Phase 2)."
+      ],
+      "discriminator": [
+        165,
+        34,
+        208,
+        239,
+        97,
+        186,
+        117,
+        159
       ],
       "accounts": [
         {
@@ -657,6 +835,32 @@ export type Gig = {
       ]
     },
     {
+      "name": "gigDisputeCleared",
+      "discriminator": [
+        25,
+        9,
+        79,
+        245,
+        160,
+        45,
+        142,
+        20
+      ]
+    },
+    {
+      "name": "gigDisputed",
+      "discriminator": [
+        174,
+        147,
+        2,
+        34,
+        137,
+        52,
+        141,
+        47
+      ]
+    },
+    {
       "name": "gigInProgress",
       "discriminator": [
         197,
@@ -771,6 +975,11 @@ export type Gig = {
       "code": 6014,
       "name": "overflow",
       "msg": "Arithmetic overflow"
+    },
+    {
+      "code": 6015,
+      "name": "notDisputedStatus",
+      "msg": "Gig must be in Disputed status"
     }
   ],
   "types": [
@@ -939,6 +1148,38 @@ export type Gig = {
       }
     },
     {
+      "name": "gigDisputeCleared",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "gig",
+            "type": "pubkey"
+          },
+          {
+            "name": "id",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "gigDisputed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "gig",
+            "type": "pubkey"
+          },
+          {
+            "name": "id",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
       "name": "gigInProgress",
       "type": {
         "kind": "struct",
@@ -995,6 +1236,9 @@ export type Gig = {
           },
           {
             "name": "archived"
+          },
+          {
+            "name": "disputed"
           }
         ]
       }

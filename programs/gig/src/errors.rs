@@ -32,4 +32,6 @@ pub enum GigError {
     InvalidStatus,
     #[msg("Arithmetic overflow")]
     Overflow,
+    #[msg("Gig must be in Disputed status")]
+    NotDisputedStatus,
 }

@@ -296,3 +296,19 @@ pub fn archive_gig_for(env: &mut Env, gig: &Pubkey) {
 pub fn cancel_gig_for(env: &mut Env, gig: &Pubkey) {
     send(&mut env.svm, &env.payer, &[ix_cancel_gig(&env.client.pubkey(), gig)], &[&env.payer, &env.client]).unwrap();
 }
+
+pub fn ix_mark_disputed_by_escrow(escrow_authority: &Pubkey, gig: &Pubkey) -> Instruction {
+    Instruction::new_with_bytes(
+        gig::ID,
+        &gig::instruction::MarkDisputedByEscrow {}.data(),
+        gig::accounts::MarkDisputedByEscrow { escrow_authority: *escrow_authority, gig: *gig }.to_account_metas(None),
+    )
+}
+
+pub fn ix_clear_dispute_by_escrow(escrow_authority: &Pubkey, gig: &Pubkey) -> Instruction {
+    Instruction::new_with_bytes(
+        gig::ID,
+        &gig::instruction::ClearDisputeByEscrow {}.data(),
+        gig::accounts::ClearDisputeByEscrow { escrow_authority: *escrow_authority, gig: *gig }.to_account_metas(None),
+    )
+}
