@@ -1,3 +1,4 @@
+import { DEVNET_USDC_MINT } from "@proove/config";
 import type {
   Address,
   AiRegistryEntry,
@@ -19,7 +20,7 @@ import type {
   Receivable,
   Role,
   UserProfile,
-} from "@/lib/domain/types";
+} from "@proove/types/types";
 
 export type AiFailureMode = "none" | "oneSeat" | "twoSeats" | "split" | "retries";
 
@@ -72,4 +73,4 @@ export const KEEPER = "Keeper1111111111111111111111111111111111111";
 export const AI_SERVICE = "AiSvc11111111111111111111111111111111111111";
 export const ISSUER = "Proove1ssuer1111111111111111111111111111111";
 export const TREASURY = "Treasury1111111111111111111111111111111111";
-export const USDC_MINT = "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU";
+export const USDC_MINT = DEVNET_USDC_MINT;

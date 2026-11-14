@@ -16,9 +16,9 @@ import type {
   NeutralBrief,
   SeatId,
   VerificationReport,
-} from "@/lib/domain/types";
-import { hashDocument, mockHash, sampleIndices } from "@/lib/domain/hash";
-import { ALLOWED_RULINGS } from "@/lib/domain/dispute";
+} from "@proove/types/types";
+import { hashDocument, mockHash, sampleIndices } from "@proove/types/hash";
+import { ALLOWED_RULINGS } from "@proove/types/dispute";
 
 export const MOCK_MODELS = {
   scope: "gemini-3.8-flash",

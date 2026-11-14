@@ -1,0 +1,23 @@
+{
+  "name": "@proove/deploy",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "setup": "tsx src/init.ts",
+    "e2e": "tsx src/e2e.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.32.1",
+    "@proove/config": "workspace:*",
+    "@proove/idl": "workspace:*",
+    "@solana/spl-token": "^0.4.15",
+    "@solana/web3.js": "^1.98.4"
+  },
+  "devDependencies": {
+    "@types/node": "^24",
+    "tsx": "^4.20.6",
+    "typescript": "^5"
+  }
+}

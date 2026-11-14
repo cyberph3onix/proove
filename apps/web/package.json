@@ -16,6 +16,8 @@
     "@noble/curves": "^2.2.0",
     "@noble/hashes": "^2.4.0",
     "@privy-io/react-auth": "^3.35.2",
+    "@proove/config": "workspace:*",
+    "@proove/types": "workspace:*",
     "@react-three/fiber": "^9.8.2",
     "@solana-program/token": "^0.14.0",
     "@solana/kit": "^6.10.0",

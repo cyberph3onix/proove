@@ -1,0 +1,28 @@
+{
+  "name": "@proove/ai",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "tsx watch --env-file-if-exists=.env src/main.ts",
+    "start": "tsx --env-file-if-exists=.env src/main.ts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "allowlist": "tsx scripts/print-prompt-hashes.ts"
+  },
+  "dependencies": {
+    "@google/genai": "^3.3.0",
+    "@proove/types": "workspace:*",
+    "fastify": "^5.8.0",
+    "zod": "^4.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24",
+    "tsx": "^4.20.0",
+    "typescript": "^5",
+    "vitest": "^3.2.7"
+  }
+}

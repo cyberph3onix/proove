@@ -1,10 +1,10 @@
 {
-  "address": "HHcJGbKX7fzaPE1UYxqfhGgToDHCDhiWCMawbkumewtt",
+  "address": "5Tm5aXm3NRzX6fJL3R7NeRbjhZjxTUfJ4nTLurPxdPc6",
   "metadata": {
     "name": "reputation",
     "version": "0.1.0",
     "spec": "0.1.0",
-    "description": "PayGig decentralized reputation program"
+    "description": "Proove decentralized reputation program"
   },
   "instructions": [
     {
@@ -234,38 +234,38 @@
             "program": {
               "kind": "const",
               "value": [
-                98,
-                89,
-                203,
-                75,
-                160,
-                199,
-                161,
-                198,
-                78,
-                224,
-                178,
-                231,
-                212,
-                210,
-                144,
-                11,
-                129,
-                238,
-                195,
-                112,
-                87,
-                254,
-                168,
-                100,
-                27,
-                110,
-                193,
-                247,
-                158,
-                72,
                 9,
-                63
+                171,
+                214,
+                136,
+                77,
+                97,
+                135,
+                178,
+                191,
+                149,
+                228,
+                128,
+                226,
+                11,
+                227,
+                123,
+                15,
+                198,
+                5,
+                248,
+                231,
+                97,
+                234,
+                93,
+                145,
+                208,
+                118,
+                44,
+                131,
+                219,
+                236,
+                52
               ]
             }
           }
@@ -401,38 +401,38 @@
             "program": {
               "kind": "const",
               "value": [
-                98,
-                89,
-                203,
-                75,
-                160,
-                199,
-                161,
-                198,
-                78,
-                224,
-                178,
-                231,
-                212,
-                210,
-                144,
-                11,
-                129,
-                238,
-                195,
-                112,
-                87,
-                254,
-                168,
-                100,
-                27,
-                110,
-                193,
-                247,
-                158,
-                72,
                 9,
-                63
+                171,
+                214,
+                136,
+                77,
+                97,
+                135,
+                178,
+                191,
+                149,
+                228,
+                128,
+                226,
+                11,
+                227,
+                123,
+                15,
+                198,
+                5,
+                248,
+                231,
+                97,
+                234,
+                93,
+                145,
+                208,
+                118,
+                44,
+                131,
+                219,
+                236,
+                52
               ]
             }
           }
@@ -471,6 +471,16 @@
         {
           "name": "earnings",
           "type": "u64"
+        },
+        {
+          "name": "delivered_on_time",
+          "type": "bool"
+        },
+        {
+          "name": "disputed_outcome",
+          "type": {
+            "option": "u16"
+          }
         }
       ]
     }
@@ -638,6 +648,11 @@
       "code": 6010,
       "name": "MetadataTooLong",
       "msg": "Badge metadata exceeds maximum length"
+    },
+    {
+      "code": 6011,
+      "name": "InvalidDisputeOutcome",
+      "msg": "Dispute outcome must be between 0 and 10000 basis points"
     }
   ],
   "types": [
@@ -760,6 +775,18 @@
           },
           {
             "name": "reputation_score",
+            "type": "u64"
+          },
+          {
+            "name": "on_time_jobs",
+            "type": "u64"
+          },
+          {
+            "name": "disputes_won",
+            "type": "u64"
+          },
+          {
+            "name": "disputes_lost",
             "type": "u64"
           }
         ]
@@ -946,6 +973,24 @@
           {
             "name": "bump",
             "type": "u8"
+          },
+          {
+            "name": "on_time_jobs",
+            "docs": [
+              "Jobs where every delivery landed on or before the gig deadline."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "disputes_won",
+            "docs": [
+              "Disputed jobs whose ruling gave the freelancer at least half."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "disputes_lost",
+            "type": "u64"
           }
         ]
       }

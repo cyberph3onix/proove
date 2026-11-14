@@ -11,7 +11,7 @@ import { Pill } from "@/components/ui/pill";
 import { Empty, PageHeader, PersonName, Relative } from "@/components/proove/primitives";
 import { useGigs, useNow, useProfiles } from "@/hooks/use-chain";
 import { NAV_CATEGORIES } from "@/components/layout/nav-categories";
-import { formatUsdc, formatStars, USDC } from "@/lib/domain/format";
+import { formatUsdc, formatStars, USDC } from "@proove/types/format";
 
 const MIN_BUDGETS = [0, 100, 500, 1000];
 const CATEGORIES = ["All", "AI Services", "Programming & Tech", ...NAV_CATEGORIES.map((c) => c.label).filter((l) => !["AI Services", "Programming & Tech"].includes(l))];

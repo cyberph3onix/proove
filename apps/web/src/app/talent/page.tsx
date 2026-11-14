@@ -10,9 +10,9 @@ import { Stars, Pill } from "@/components/ui/pill";
 import { Avatar, Empty, PageHeader } from "@/components/proove/primitives";
 import { useProfiles } from "@/hooks/use-chain";
 import { useChain } from "@/lib/mock/store";
-import { BADGE_META } from "@/lib/domain/reputation";
-import { formatStars, formatUsdc } from "@/lib/domain/format";
-import type { BadgeType, PersonaProfile, UserProfile } from "@/lib/domain/types";
+import { BADGE_META } from "@proove/types/reputation";
+import { formatStars, formatUsdc } from "@proove/types/format";
+import type { BadgeType, PersonaProfile, UserProfile } from "@proove/types/types";
 import { useReducedMotion } from "@/components/three";
 
 function TiltCard({ children, href }: { children: React.ReactNode; href: string }) {

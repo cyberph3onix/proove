@@ -11,7 +11,7 @@ import { AiPanel, BriefPanel, EvidencePanel, Section, Timeline, VerdictList } fr
 import { AppealBox, EvidenceForm, HumanOnlyButton, KeeperActions, TieBreak, VerdictEditor } from "@/components/dispute/case-actions";
 import { DisputeChamber, Poster, Scene3D } from "@/components/three";
 import { useCase, useNow, useSession } from "@/hooks/use-chain";
-import { formatRuling, formatUsdc, shortAddress, DAY } from "@/lib/domain/format";
+import { formatRuling, formatUsdc, shortAddress, DAY } from "@proove/types/format";
 
 function Case({ caseId }: { caseId: string }) {
   const { c, evidence, previous, milestone, gig } = useCase(caseId);

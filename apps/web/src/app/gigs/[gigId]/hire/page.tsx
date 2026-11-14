@@ -13,8 +13,8 @@ import { CoinDropVault, Scene3D, VaultPoster } from "@/components/three";
 import { useGig, useSession } from "@/hooks/use-chain";
 import { useTransaction, PHASE_LABEL } from "@/lib/tx";
 import { useChain } from "@/lib/mock/store";
-import { formatDuration, formatUsdc } from "@/lib/domain/format";
-import { ZERO_HASH } from "@/lib/domain/types";
+import { formatDuration, formatUsdc } from "@proove/types/format";
+import { ZERO_HASH } from "@proove/types/types";
 
 const STEPS = ["Confirm milestone", "Fund escrow", "Locked"];
 

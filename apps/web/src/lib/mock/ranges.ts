@@ -1,4 +1,4 @@
-import { DAY, HOUR, USDC, formatBps, formatDuration, formatUsdc } from "@/lib/domain/format";
+import { DAY, HOUR, USDC, formatBps, formatDuration, formatUsdc } from "@proove/types/format";
 
 /**
  * Allowed ranges for every governed setting. The real programs enforce these

@@ -1,10 +1,10 @@
 "use client";
 
 import { CheckCircle2, CircleHelp, FileText, XCircle, Dices } from "lucide-react";
-import type { DeliveryFile, MilestoneSpec, VerificationReport } from "@/lib/domain/types";
+import type { DeliveryFile, MilestoneSpec, VerificationReport } from "@proove/types/types";
 import { Pill } from "@/components/ui/pill";
 import { cn } from "@/lib/utils";
-import { shortHash } from "@/lib/domain/format";
+import { shortHash } from "@proove/types/format";
 
 const CHECK_LABEL = { automatic: "automatic", sampled: "sample audit", manual: "client judgement" } as const;
 

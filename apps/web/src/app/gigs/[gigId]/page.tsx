@@ -12,11 +12,12 @@ import { Countdown, Empty, Field, GigStatusPill, Modal, PersonChip, Relative, Tx
 import { MilestoneTrack, Poster, Scene3D } from "@/components/three";
 import { useEvents, useGig, useNow, useProfile, useSession } from "@/hooks/use-chain";
 import { useTransaction } from "@/lib/tx";
-import { formatDate, formatStars, formatUsdc, usdcToBase } from "@/lib/domain/format";
-import { hashDocument, sha256Hex } from "@/lib/domain/hash";
-import { ZERO_HASH, type MilestoneSpec } from "@/lib/domain/types";
+import { formatDate, formatStars, formatUsdc, usdcToBase } from "@proove/types/format";
+import { hashDocument, sha256Hex } from "@proove/types/hash";
+import { ZERO_HASH, type MilestoneSpec } from "@proove/types/types";
 import { USDC_MINT } from "@/lib/mock/state";
 import { useChain } from "@/lib/mock/store";
+import { isChainMode } from "@/lib/chain/mode";
 
 function Gig({ gigId }: { gigId: string }) {
   const { gig, milestones } = useGig(gigId);
@@ -30,6 +31,7 @@ function Gig({ gigId }: { gigId: string }) {
   const profiles = useChain((s) => s.profiles);
   const [adding, setAdding] = useState(false);
   const [rating, setRating] = useState(false);
+  const [assignee, setAssignee] = useState("");
 
   if (!gig) return <div className="max-w-[1000px] mx-auto px-4 sm:px-6 py-10"><Empty title="Gig not found">It may have been cancelled, or the link is wrong.</Empty></div>;
 
@@ -127,17 +129,36 @@ function Gig({ gigId }: { gigId: string }) {
             </>
           ) : isClient ? (
             <div className="flex flex-col gap-2">
-              {gig.applicants.length === 0 && <p className="text-xs text-[#A1A1AA]">No applicants yet.</p>}
-              {gig.applicants.map((a) => (
-                <div key={a} className="flex items-center justify-between gap-2">
-                  <PersonChip address={a} sub={profiles[a] ? `${profiles[a].reputationScore} rep · ${profiles[a].completedJobs} jobs` : "New"} />
-                  <TxButton size="sm" phase={tx.phase} onClick={() => tx.run("assignFreelancer", { gig: gig.address, freelancer: a }, "Assign freelancer")}>
+              {isChainMode ? (
+                <>
+                  <p className="text-xs text-[#A1A1AA]">Applications are off-chain in Phase 1. Assign a wallet directly.</p>
+                  <Field label="Freelancer wallet">
+                    <input value={assignee} onChange={(e) => setAssignee(e.target.value)} placeholder="Base58 address" className={inputClass} />
+                  </Field>
+                  <TxButton
+                    size="sm"
+                    phase={tx.phase}
+                    disabled={!assignee.trim()}
+                    onClick={() => tx.run("assignFreelancer", { gig: gig.address, freelancer: assignee.trim() }, "Assign freelancer")}
+                  >
                     Assign
                   </TxButton>
-                </div>
-              ))}
+                </>
+              ) : (
+                <>
+                  {gig.applicants.length === 0 && <p className="text-xs text-[#A1A1AA]">No applicants yet.</p>}
+                  {gig.applicants.map((a) => (
+                    <div key={a} className="flex items-center justify-between gap-2">
+                      <PersonChip address={a} sub={profiles[a] ? `${profiles[a].reputationScore} rep · ${profiles[a].completedJobs} jobs` : "New"} />
+                      <TxButton size="sm" phase={tx.phase} onClick={() => tx.run("assignFreelancer", { gig: gig.address, freelancer: a }, "Assign freelancer")}>
+                        Assign
+                      </TxButton>
+                    </div>
+                  ))}
+                </>
+              )}
             </div>
-          ) : (
+          ) : isChainMode ? null : (
             <div>
               <p className="text-xs text-[#A1A1AA] mb-3">{gig.applicants.length} applicant{gig.applicants.length === 1 ? "" : "s"} so far.</p>
               {address && gig.applicants.includes(address) ? (

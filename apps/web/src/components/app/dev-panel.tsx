@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { FlaskConical, X } from "lucide-react";
 import { useChain, useChainStore } from "@/lib/mock/store";
-import { DAY, HOUR, formatDateTime, formatUsdc, USDC } from "@/lib/domain/format";
+import { DAY, HOUR, formatDateTime, formatUsdc, USDC } from "@proove/types/format";
 import { useHydrated, useNow } from "@/hooks/use-chain";
 import type { AiFailureMode } from "@/lib/mock/state";
 import { cn } from "@/lib/utils";

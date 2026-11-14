@@ -39,6 +39,14 @@ export function deriveMilestone(gig: PublicKey, index: number): PublicKey {
   )[0];
 }
 
+/** The singleton escrow `ProtocolConfig` PDA (governed settings + treasury). */
+export function deriveProtocolConfig(): PublicKey {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("protocol_config")],
+    PROGRAM_IDS.escrow,
+  )[0];
+}
+
 /** Escrow's CPI-signer PDA. Off-curve, so no keypair can ever produce it. */
 export function deriveEscrowAuthority(): PublicKey {
   return PublicKey.findProgramAddressSync(

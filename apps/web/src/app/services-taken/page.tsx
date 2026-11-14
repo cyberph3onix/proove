@@ -9,7 +9,7 @@ import { Stars } from "@/components/ui/pill";
 import { Empty, GigStatusPill, PageHeader, PersonChip } from "@/components/proove/primitives";
 import { useMyGigs, useSession } from "@/hooks/use-chain";
 import { useChain } from "@/lib/mock/store";
-import { formatDate, formatUsdc } from "@/lib/domain/format";
+import { formatDate, formatUsdc } from "@proove/types/format";
 
 function ServicesTaken() {
   const { address } = useSession();

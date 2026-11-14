@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import { AlertTriangle, CheckCircle2, CircleHelp, RotateCcw, XCircle, FileText, Eye } from "lucide-react";
-import type { AiSeat, DisputeCase, EvidenceItem, MilestoneSpec, NeutralBrief, Verdict } from "@/lib/domain/types";
+import type { AiSeat, DisputeCase, EvidenceItem, MilestoneSpec, NeutralBrief, Verdict } from "@proove/types/types";
 import { GlassCard, Eyebrow } from "@/components/ui/glass-card";
 import { Pill } from "@/components/ui/pill";
 import { Button } from "@/components/ui/button";
 import { HashBadge, PersonName, Relative } from "@/components/proove/primitives";
-import { formatRuling, formatDateTime } from "@/lib/domain/format";
+import { formatRuling, formatDateTime } from "@proove/types/format";
 import { cn } from "@/lib/utils";
 
 const OUTCOME_LABEL: Record<string, string> = {

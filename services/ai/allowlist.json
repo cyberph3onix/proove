@@ -1,0 +1,10 @@
+{
+  "prompts": {
+    "scope": ["96da2bf8ac3d6435665848093652443f3c013f1e8f6765ae123cfabf224e88a7"],
+    "verify": ["2cba06817433ec2ce2b0c5fd905db920f28b2fd3e9f1123cdfc7b4a562a83d83"]
+  },
+  "models": {
+    "scope": ["gemini-3.8-flash"],
+    "verify": ["gemini-3.8-flash"]
+  }
+}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef } from "react";
-import { prng } from "@/lib/domain/hash";
+import { prng } from "@proove/types/hash";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { GlowMaterial, PINK, Stage, damp, makeLabelTexture, useKeepAnimating, RoundedBox } from "./kit";

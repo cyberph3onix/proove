@@ -11,10 +11,10 @@ import { Poster, Scene3D, SettingDials } from "@/components/three";
 import { useNow, useProfile, useSession } from "@/hooks/use-chain";
 import { useChain } from "@/lib/mock/store";
 import { SETTING_RANGES } from "@/lib/mock/ranges";
-import { formatUsdc, shortHash, formatDate } from "@/lib/domain/format";
-import { voterWeight } from "@/lib/domain/reputation";
+import { formatUsdc, shortHash, formatDate } from "@proove/types/format";
+import { voterWeight } from "@proove/types/reputation";
 import { useTransaction } from "@/lib/tx";
-import type { Proposal, SettingChange } from "@/lib/domain/types";
+import type { Proposal, SettingChange } from "@proove/types/types";
 
 const DIAL_KEYS = ["ProtocolConfig.partialTimeout", "ProtocolConfig.fullTimeout", "ProtocolConfig.partialBps", "ProtocolConfig.feeBps"];
 const STATUS_TONE: Record<Proposal["status"], "accent" | "good" | "bad" | "warn" | "default"> = { voting: "accent", succeeded: "good", timelock: "warn", executed: "good", defeated: "bad", vetoed: "bad" };

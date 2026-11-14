@@ -3,10 +3,10 @@
  * few "prior history" counters), so every fixture is a state the real
  * programs could actually reach.
  */
-import type { Address, AiRegistryEntry, MilestoneSpec, Persona, PersonaProfile, VerificationReport } from "@/lib/domain/types";
-import { ZERO_HASH } from "@/lib/domain/types";
-import { hashDocument, mockAddress, mockHash } from "@/lib/domain/hash";
-import { DAY, HOUR, USDC } from "@/lib/domain/format";
+import type { Address, AiRegistryEntry, MilestoneSpec, Persona, PersonaProfile, VerificationReport } from "@proove/types/types";
+import { ZERO_HASH } from "@proove/types/types";
+import { hashDocument, mockAddress, mockHash } from "@proove/types/hash";
+import { DAY, HOUR, USDC } from "@proove/types/format";
 import { MOCK_MODELS, PROMPT_HASHES } from "./ai";
 import { ensureProfile, instructions as ix, refreshProfile, type Ctx } from "./instructions";
 import { keeperTick } from "./keeper";

@@ -10,7 +10,7 @@ import { CaseStatusPill, Countdown, Empty, Field, KeyValue, PageHeader, Stat, Tx
 import { Poster, Scene3D, StakeColumn } from "@/components/three";
 import { useCases, useNow, useSession } from "@/hooks/use-chain";
 import { useChain } from "@/lib/mock/store";
-import { formatUsdc, formatBps, shortAddress, usdcToBase } from "@/lib/domain/format";
+import { formatUsdc, formatBps, shortAddress, usdcToBase } from "@proove/types/format";
 import { useTransaction } from "@/lib/tx";
 
 function Arbitrate() {

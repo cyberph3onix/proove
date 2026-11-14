@@ -1,10 +1,10 @@
 "use client";
 
 import { useMemo } from "react";
-import type { Address } from "@/lib/domain/types";
-import { ZERO_HASH } from "@/lib/domain/types";
+import type { Address } from "@proove/types/types";
+import { ZERO_HASH } from "@proove/types/types";
 import { useChain } from "@/lib/mock/store";
-import { formatUsdc } from "@/lib/domain/format";
+import { formatUsdc } from "@proove/types/format";
 
 export interface ActionItem {
   id: string;

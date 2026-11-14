@@ -3,11 +3,12 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { produce } from "immer";
-import type { Address, Role } from "@/lib/domain/types";
+import type { Address, Role } from "@proove/types/types";
 import { buildSeed, emptyState } from "./seed";
 import { instructions, ProgramError, type InstructionArgs, type InstructionName } from "./instructions";
 import { keeperTick } from "./keeper";
 import { STATE_VERSION, type ChainState, type DevSettings } from "./state";
+import { isChainMode, storeRole } from "@/lib/chain/mode";
 
 export const wallNow = () => Math.floor(Date.now() / 1000);
 
@@ -15,6 +16,8 @@ interface Store {
   chain: ChainState;
   hydrated: boolean;
   init: () => void;
+  /** Replace the whole chain from the indexer/RPC mirror (chain mode only). */
+  hydrate: (chain: ChainState) => void;
   now: () => number;
   /** Preflight: run the instruction on a throwaway copy. Throws on failure. */
   simulate: <K extends InstructionName>(name: K, args: InstructionArgs<K>, actor?: Address) => void;
@@ -46,12 +49,18 @@ export const useChainStore = create<Store>()(
       hydrated: false,
 
       init: () => {
+        if (isChainMode) {
+          set({ hydrated: true });
+          return;
+        }
         if (get().hydrated) return;
         const fresh = get().chain.version !== STATE_VERSION || Object.keys(get().chain.gigs).length === 0;
         if (fresh) set({ chain: buildSeed(wallNow()) });
         set({ hydrated: true });
         get().tick();
       },
+
+      hydrate: (chain) => set({ chain, hydrated: true }),
 
       now: () => wallNow() + get().chain.clockOffset,
 
@@ -89,15 +98,16 @@ export const useChainStore = create<Store>()(
       },
 
       setPersona: (address, role) =>
-        set((st) => ({
-          chain: {
-            ...st.chain,
-            persona: address,
-            role: role ?? st.chain.personas.find((p) => p.address === address)?.defaultRole ?? st.chain.role,
-          },
-        })),
+        set((st) => {
+          const nextRole = role ?? st.chain.personas.find((p) => p.address === address)?.defaultRole ?? st.chain.role;
+          storeRole(nextRole);
+          return { chain: { ...st.chain, persona: address, role: nextRole } };
+        }),
 
-      setRole: (role) => set((st) => ({ chain: { ...st.chain, role } })),
+      setRole: (role) => {
+        storeRole(role);
+        set((st) => ({ chain: { ...st.chain, role } }));
+      },
 
       advanceClock: (seconds) => {
         set((st) => ({ chain: { ...st.chain, clockOffset: st.chain.clockOffset + seconds } }));
@@ -123,7 +133,7 @@ export const useChainStore = create<Store>()(
       name: "proove-mock-chain",
       version: STATE_VERSION,
       storage: createJSONStorage(() => localStorage),
-      partialize: (st) => ({ chain: st.chain }),
+      partialize: (st) => (isChainMode ? {} : { chain: st.chain }),
       skipHydration: true,
       // Older shapes are discarded and reseeded.
       migrate: () => ({ chain: emptyState(0) }) as unknown as Store,
