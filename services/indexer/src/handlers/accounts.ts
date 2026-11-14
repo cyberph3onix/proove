@@ -1,13 +1,13 @@
 import type { IndexedProgram } from "../programs";
-import type { AccountHandler } from "./types";
-import { hex, lowerFirst, num, parseSkills, pubkeyOrNull, str, time } from "./util";
+import type { AccountHandler, Mutation } from "./types";
+import { hash32, hex, lowerFirst, num, parseSkills, pubkeyOrNull, str, time } from "./util";
 
 /**
  * Account snapshot handlers keyed by `${program}.${AccountName}` (IDL names).
  * Used by the `getProgramAccounts` backfill: each decoded account overwrites
  * every column it carries, stamped with the RPC context slot, so reputation
  * and other state are read from accounts rather than replayed from events.
- * Accounts with no entry (EscrowVault, AchievementConfig) are skipped.
+ * Accounts with no entry (AchievementConfig) are skipped.
  */
 export const ACCOUNT_HANDLERS: Partial<Record<`${IndexedProgram}.${string}`, AccountHandler>> = {
   "gig.Gig": (d, { address }) => [
@@ -32,26 +32,73 @@ export const ACCOUNT_HANDLERS: Partial<Record<`${IndexedProgram}.${string}`, Acc
       },
     },
   ],
-  "escrow.Milestone": (d, { address }) => [
+  "escrow.Milestone": (d, { address }) => {
+    const funded = num(d.funded_at) !== 0;
+    return [
+      {
+        table: "milestones",
+        key: address,
+        set: {
+          gig: str(d.gig),
+          index: num(d.index),
+          amount: num(d.amount),
+          released: num(d.released),
+          fees_paid: num(d.fees_paid),
+          refunded: num(d.refunded),
+          status: lowerFirst(d.status),
+          spec_hash: hash32(d.spec_hash),
+          delivery_hash: hash32(d.delivery_hash),
+          report_hash: hash32(d.report_hash),
+          terms_accepted: Boolean(d.terms_accepted),
+          funded_at: time(d.funded_at),
+          submitted_at: time(d.submitted_at),
+          submitted_slot: num(d.submitted_slot) || null,
+          approved_at: time(d.approved_at),
+          // Terms are snapshotted at funding; before that the fields are zero.
+          partial_timeout: funded ? num(d.partial_timeout) : null,
+          full_timeout: funded ? num(d.full_timeout) : null,
+          partial_bps: funded ? num(d.partial_bps) : null,
+          fee_bps: funded ? num(d.fee_bps) : null,
+        },
+      },
+    ];
+  },
+  "escrow.EscrowVault": (d, { address }): Mutation[] => [
     {
-      table: "milestones",
+      table: "vaults",
       key: address,
       set: {
         gig: str(d.gig),
-        index: num(d.index),
-        amount: num(d.amount),
-        released: num(d.released),
-        status: lowerFirst(d.status),
-        submitted_at: time(d.submitted_at),
-        approved_at: time(d.approved_at),
-        // Fields the extended program adds; absent (left untouched) on v1 accounts.
-        ...("spec_hash" in d ? { spec_hash: hex(d.spec_hash) } : {}),
-        ...("delivery_hash" in d ? { delivery_hash: hex(d.delivery_hash) } : {}),
-        ...("report_hash" in d ? { report_hash: hex(d.report_hash) } : {}),
-        ...("terms_accepted" in d ? { terms_accepted: Boolean(d.terms_accepted) } : {}),
-        ...("submitted_slot" in d ? { submitted_slot: num(d.submitted_slot) || null } : {}),
-        ...("fees_paid" in d ? { fees_paid: num(d.fees_paid) } : {}),
-        ...("refunded" in d ? { refunded: num(d.refunded) } : {}),
+        token_account: pubkeyOrNull(d.token_account),
+        mint: pubkeyOrNull(d.mint),
+        total_locked: num(d.total_locked),
+        total_released: num(d.total_released),
+        total_fees: num(d.total_fees),
+        total_refunded: num(d.total_refunded),
+        milestone_count: num(d.milestone_count),
+        active_milestone: num(d.active_milestone),
+        cancelled_milestones: num(d.cancelled_milestones),
+        refunded_milestones: num(d.refunded_milestones),
+        late_deliveries: num(d.late_deliveries),
+        reputation_synced: Boolean(d.reputation_synced),
+      },
+    },
+    // The vault learns the mint at first funding; the gig row needs it too.
+    ...(pubkeyOrNull(d.mint) ? [{ table: "gigs" as const, key: str(d.gig), set: { mint: pubkeyOrNull(d.mint) } }] : []),
+  ],
+  "escrow.ProtocolConfig": (d, { address }) => [
+    {
+      table: "protocol_config",
+      key: address,
+      set: {
+        admin: str(d.admin),
+        treasury: str(d.treasury),
+        partial_timeout: num(d.partial_timeout),
+        full_timeout: num(d.full_timeout),
+        partial_bps: num(d.partial_bps),
+        fee_bps: num(d.fee_bps),
+        min_milestone: num(d.min_milestone),
+        no_delivery_grace: num(d.no_delivery_grace),
       },
     },
   ],
@@ -72,6 +119,7 @@ export const ACCOUNT_HANDLERS: Partial<Record<`${IndexedProgram}.${string}`, Acc
         badges_earned: num(d.badges_earned),
         created_at: num(d.created_at),
         updated_at: num(d.updated_at),
+        // Extended reputation counters: written once the IDL (so the decoded account) carries them.
         ...("on_time_jobs" in d ? { on_time_jobs: num(d.on_time_jobs) } : {}),
         ...("disputes_won" in d ? { disputes_won: num(d.disputes_won) } : {}),
         ...("disputes_lost" in d ? { disputes_lost: num(d.disputes_lost) } : {}),

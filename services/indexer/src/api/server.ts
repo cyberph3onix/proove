@@ -2,15 +2,17 @@ import { PROGRAM_IDS, type ProgramIds } from "@proove/config";
 import { PublicKey } from "@solana/web3.js";
 import Fastify, { type FastifyInstance } from "fastify";
 import type { Pool } from "../db/pool";
-import { profilePda } from "../handlers/util";
+import { profilePda, protocolConfigPda, vaultPda } from "../handlers/util";
 import {
   PROFILE_FIELDS,
+  PROTOCOL_FIELDS,
   decodeCursor,
   encodeCursor,
   sourced,
   toChainEvent,
   toGig,
   toMilestone,
+  toVault,
   type Sourced,
 } from "./mappers";
 
@@ -126,7 +128,10 @@ export function buildApi({ pool, programIds = PROGRAM_IDS, logger = false }: Api
   app.get<{ Params: { gig: string } }>("/v1/gigs/:gig", async (req, reply) => {
     const { rows } = await pool.query(`SELECT * FROM gigs WHERE address = $1`, [req.params.gig]);
     if (!rows[0]) return reply.code(404).send({ error: "gig not found" });
-    return toGig(rows[0]);
+    const vault = isPubkey(req.params.gig)
+      ? (await pool.query(`SELECT * FROM vaults WHERE address = $1`, [vaultPda(req.params.gig, programIds.escrow)])).rows[0]
+      : undefined;
+    return { ...toGig(rows[0]), vault: vault ? toVault(vault) : null };
   });
 
   app.get<{ Params: { gig: string } }>("/v1/gigs/:gig/milestones", async (req) => {
@@ -199,6 +204,31 @@ export function buildApi({ pool, programIds = PROGRAM_IDS, logger = false }: Api
       };
     },
   );
+
+  // ─── Protocol ────────────────────────────────────────────────────────────
+
+  app.get("/v1/protocol", async (_req, reply) => {
+    const account = protocolConfigPda(programIds.escrow);
+    const { rows } = await pool.query(`SELECT * FROM protocol_config WHERE address = $1`, [account]);
+    const c = rows[0];
+    if (!c) return reply.code(404).send({ error: "protocol config not indexed", account });
+    const config = Object.fromEntries(Object.entries(PROTOCOL_FIELDS).map(([field, column]) => [field, sourced(c, column, account)]));
+    // Fees are summed from ProtocolFeeCollected events; the slot is the latest one counted.
+    const fees = (
+      await pool.query<{ total: string | null; count: number; slot: number | null }>(
+        `SELECT sum(amount) AS total, count(*)::int AS count, max(slot) AS slot FROM events WHERE program = 'escrow' AND name = 'ProtocolFeeCollected'`,
+      )
+    ).rows[0]!;
+    return {
+      account,
+      slot: c.slot,
+      config,
+      treasury: {
+        totalFees: { value: Number(fees.total ?? 0), account: c.treasury, slot: fees.slot },
+        feeCount: fees.count,
+      },
+    };
+  });
 
   // ─── Reputation ──────────────────────────────────────────────────────────
 

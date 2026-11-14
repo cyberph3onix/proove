@@ -1,13 +1,14 @@
-import { formatUsdc, shortAddress } from "@proove/types/format";
+import { formatBps, formatDuration, formatUsdc, isZeroHash, shortAddress, shortHash } from "@proove/types/format";
+import { ZERO_HASH } from "@proove/types/types";
 import type { PlainRecord } from "../decode";
-import type { IndexedProgram } from "../programs";
-import type { EventHandler, Mutation } from "./types";
-import { num, parseSkills, profilePda, pubkeyOrNull, str } from "./util";
+import { IDL_BY_PROGRAM, idlAccountHasField, type IndexedProgram } from "../programs";
+import type { ColumnValue, EventHandler, Mutation } from "./types";
+import { hash32, num, parseSkills, profilePda, protocolConfigPda, pubkeyOrNull, str } from "./util";
 
 /**
  * Event handlers keyed by `${program}.${EventName}` (names as in the IDL).
  *
- * Adding an event: copy the new IDL into src/idl, then add an entry here that
+ * Adding an event: regenerate `@proove/idl`, then add an entry here that
  * says which feed row it produces (`activity`) and which entity columns it
  * writes (`mutations`). Unknown events are still stored in `events` with
  * their decoded data; they just do not touch entity tables.
@@ -85,6 +86,9 @@ const milestone = (d: PlainRecord, set: Mutation["set"], inc?: Mutation["inc"]):
   ...(inc ? { inc } : {}),
 });
 
+/** Terms a milestone snapshots from `ProtocolConfig` when it is funded (milestone column -> config column). */
+const SNAPSHOT_TERMS = { partial_timeout: "partial_timeout", full_timeout: "full_timeout", partial_bps: "partial_bps", fee_bps: "fee_bps" };
+
 const escrowHandlers: Record<string, EventHandler> = {
   MilestoneCreated: {
     activity: (d) => ({
@@ -92,9 +96,31 @@ const escrowHandlers: Record<string, EventHandler> = {
       gig: str(d.gig),
       milestone: str(d.milestone),
       amount: num(d.amount),
-      receipt: `Milestone ${num(d.index) + 1} created for ${formatUsdc(num(d.amount))}.`,
+      receipt: `Milestone ${num(d.index) + 1} created for ${formatUsdc(num(d.amount))}${isZeroHash(hash32(d.spec_hash)) ? "" : ` with a committed spec (${shortHash(hash32(d.spec_hash))})`}.`,
     }),
-    mutations: (d, ctx) => [milestone(d, { index: num(d.index), amount: num(d.amount), status: "pendingFunding", created_at: ctx.blockTime })],
+    mutations: (d, ctx) => [
+      milestone(d, {
+        index: num(d.index),
+        amount: num(d.amount),
+        status: "pendingFunding",
+        spec_hash: hash32(d.spec_hash),
+        delivery_hash: ZERO_HASH,
+        report_hash: ZERO_HASH,
+        terms_accepted: false,
+        fees_paid: 0,
+        refunded: 0,
+        created_at: ctx.blockTime,
+      }),
+    ],
+  },
+  TermsAccepted: {
+    activity: (d) => ({
+      actors: [str(d.freelancer)],
+      gig: str(d.gig),
+      milestone: str(d.milestone),
+      receipt: `${shortAddress(str(d.freelancer))} accepted the milestone terms (spec ${shortHash(hash32(d.spec_hash))}).`,
+    }),
+    mutations: (d) => [milestone(d, { terms_accepted: true, spec_hash: hash32(d.spec_hash) })],
   },
   MilestoneFunded: {
     activity: (d) => ({
@@ -104,17 +130,31 @@ const escrowHandlers: Record<string, EventHandler> = {
       amount: num(d.amount),
       receipt: `${formatUsdc(num(d.amount))} locked in escrow for a milestone.`,
     }),
-    mutations: (d, ctx) => [milestone(d, { amount: num(d.amount), status: "funded", funded_at: ctx.blockTime })],
+    // The event does not carry the snapshotted terms; they are the protocol
+    // config in force at this slot (the Milestone account snapshot confirms them).
+    mutations: (d, ctx) => [
+      {
+        ...milestone(d, { amount: num(d.amount), status: "funded", funded_at: ctx.blockTime }),
+        copy: { table: "protocol_config", key: protocolConfigPda(ctx.programIds.escrow), columns: SNAPSHOT_TERMS },
+      },
+    ],
   },
   DeliverySubmitted: {
     activity: (d) => ({
       actors: [],
       gig: str(d.gig),
       milestone: str(d.milestone),
-      receipt: "Delivery committed on-chain. The partial-release clock started.",
+      receipt: `Delivery ${shortHash(hash32(d.delivery_hash))} committed on-chain${isZeroHash(hash32(d.report_hash)) ? "" : " with a verification report"}. The partial-release clock started.`,
     }),
-    // submitted_slot is not in the v1 event; the transaction's slot is the same value.
-    mutations: (d, ctx) => [milestone(d, { status: "submitted", submitted_at: num(d.submitted_at), submitted_slot: ctx.slot })],
+    mutations: (d) => [
+      milestone(d, {
+        status: "submitted",
+        submitted_at: num(d.submitted_at),
+        submitted_slot: num(d.submitted_slot),
+        delivery_hash: hash32(d.delivery_hash),
+        report_hash: hash32(d.report_hash),
+      }),
+    ],
   },
   MilestoneApproved: {
     activity: (d) => ({
@@ -144,7 +184,29 @@ const escrowHandlers: Record<string, EventHandler> = {
       amount: num(d.amount_released),
       receipt: `Full timeout reached; the remaining ${formatUsdc(num(d.amount_released))} was released.`,
     }),
-    mutations: (d) => [milestone(d, { status: "completed" }, { released: num(d.amount_released) })],
+    mutations: (d, ctx) => [
+      milestone(d, { status: "completed", ...(ctx.blockTime ? { approved_at: ctx.blockTime } : {}) }, { released: num(d.amount_released) }),
+    ],
+  },
+  ProtocolFeeCollected: {
+    activity: (d) => ({
+      actors: [],
+      gig: str(d.gig),
+      milestone: str(d.milestone),
+      amount: num(d.amount),
+      receipt: `Protocol fee of ${formatUsdc(num(d.amount))} sent to the treasury.`,
+    }),
+    mutations: (d) => [milestone(d, {}, { fees_paid: num(d.amount) })],
+  },
+  RefundedAfterDeadline: {
+    activity: (d) => ({
+      actors: [],
+      gig: str(d.gig),
+      milestone: str(d.milestone),
+      amount: num(d.amount),
+      receipt: `Nothing was delivered by the deadline plus grace, so ${formatUsdc(num(d.amount))} went back to the client.`,
+    }),
+    mutations: (d) => [milestone(d, { status: "refunded" }, { refunded: num(d.amount) })],
   },
   MilestoneCancelledBeforeFunding: {
     activity: (d) => ({
@@ -156,7 +218,48 @@ const escrowHandlers: Record<string, EventHandler> = {
     // The program closes the milestone account.
     mutations: (d) => [{ table: "milestones", key: str(d.milestone), remove: true }],
   },
+  ProtocolConfigUpdated: {
+    activity: (d) => ({
+      actors: [str(d.admin)],
+      receipt:
+        `Protocol terms set: ${formatBps(num(d.fee_bps))} fee, ${formatBps(num(d.partial_bps))} released after ${formatDuration(num(d.partial_timeout))} ` +
+        `and the rest after ${formatDuration(num(d.full_timeout))} without a client response. Applies to milestones funded from now on.`,
+    }),
+    mutations: (d, ctx) => [
+      {
+        table: "protocol_config",
+        key: protocolConfigPda(ctx.programIds.escrow),
+        set: {
+          admin: str(d.admin),
+          treasury: str(d.treasury),
+          partial_timeout: num(d.partial_timeout),
+          full_timeout: num(d.full_timeout),
+          partial_bps: num(d.partial_bps),
+          fee_bps: num(d.fee_bps),
+          min_milestone: num(d.min_milestone),
+          no_delivery_grace: num(d.no_delivery_grace),
+          ...(ctx.blockTime ? { updated_at: ctx.blockTime } : {}),
+        },
+      },
+    ],
+  },
 };
+
+/**
+ * UserProfile counters the extended reputation program adds. Until the IDL
+ * carries them they stay NULL; once it does, new profiles start them at 0 and
+ * events/accounts that include them write them.
+ */
+export const EXTENDED_PROFILE_COUNTERS = ["on_time_jobs", "disputes_won", "disputes_lost"] as const;
+
+function extendedCounters(d: PlainRecord | null): Record<string, ColumnValue> {
+  return Object.fromEntries(
+    EXTENDED_PROFILE_COUNTERS.filter((c) => (d ? c in d : idlAccountHasField(IDL_BY_PROGRAM.reputation, "UserProfile", c))).map((c) => [
+      c,
+      d ? num(d[c]) : 0,
+    ]),
+  );
+}
 
 const reputationHandlers: Record<string, EventHandler> = {
   ProfileCreated: {
@@ -176,6 +279,7 @@ const reputationHandlers: Record<string, EventHandler> = {
           average_rating: 0,
           reputation_score: 0,
           badges_earned: 0,
+          ...extendedCounters(null),
           created_at: num(d.created_at),
           updated_at: num(d.created_at),
         },
@@ -216,6 +320,7 @@ const reputationHandlers: Record<string, EventHandler> = {
           successful_jobs: num(d.successful_jobs),
           total_earnings: num(d.total_earnings),
           reputation_score: num(d.reputation_score),
+          ...extendedCounters(d),
           ...(ctx.blockTime ? { updated_at: ctx.blockTime } : {}),
         },
       },
