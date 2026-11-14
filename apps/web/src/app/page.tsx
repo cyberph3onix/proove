@@ -1,12 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
-import { useRef, useState } from "react";
-import { motion, useMotionValueEvent, useScroll, AnimatePresence } from "framer-motion";
 import { FileCheck2, Gavel, Landmark, BadgeCheck, Receipt, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
-import { HeroVault, Scene3D, VaultPoster } from "@/components/three";
 import { useCases, useHydrated, useAllMilestones } from "@/hooks/use-chain";
 import { lockedRemaining } from "@/lib/domain/dispute";
 import { formatUsdc } from "@/lib/domain/format";
@@ -74,81 +72,53 @@ function LiveStats() {
 }
 
 export default function Home() {
-  const storyRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ target: storyRef, offset: ["start start", "end end"] });
-  const [step, setStep] = useState(-1);
-  useMotionValueEvent(scrollYProgress, "change", (v) => {
-    const s = v < 0.08 ? -1 : Math.min(3, Math.floor(((v - 0.08) / 0.92) * 4));
-    setStep(s);
-  });
-  const stage = Math.max(0, step);
-
   return (
     <>
-      <section ref={storyRef} className="relative h-[500vh]">
-        <div className="sticky top-[72px] md:top-[120px] h-[calc(100vh-72px)] md:h-[calc(100vh-120px)] overflow-hidden">
-          {/* wordmark behind the vault */}
-          <div
-            aria-hidden
-            className="pointer-events-none select-none absolute inset-x-0 top-[18%] md:top-[14%] text-center font-bold lowercase tracking-[-0.06em] text-[#FF6FAF] transition-opacity duration-700"
-            style={{ fontSize: "clamp(96px, 24vw, 380px)", lineHeight: 0.9, opacity: step < 0 ? 0.92 : 0.12 }}
-          >
-            proove
-          </div>
+      <div className="relative mx-auto w-full max-w-[1600px]">
+        <Image
+          src="/images/hero-banner.png"
+          alt="PROOVE"
+          width={1600}
+          height={900}
+          className="w-full h-[60vh] min-h-[320px] sm:h-[70vh] md:h-auto object-cover"
+          priority
+        />
 
-          <Scene3D className="absolute inset-0" label="A glass vault holding milestone coins; it seals, glows and opens as the story progresses" poster={<VaultPoster />}>
-            {(active) => <HeroVault active={active} stage={stage} />}
-          </Scene3D>
-
-          <div className="relative h-full max-w-[1440px] mx-auto px-4 sm:px-6 md:px-12 flex flex-col justify-end pb-10 sm:pb-14">
-            <AnimatePresence mode="wait">
-              {step < 0 ? (
-                <motion.div key="hero" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} className="flex flex-col items-center text-center gap-5">
-                  <h1 className="text-white font-semibold tracking-tight max-w-[720px]" style={{ fontSize: "clamp(22px, 3vw, 34px)", lineHeight: 1.2 }}>
-                    Freelance work you can prove: agreed terms, checked deliveries, fair disputes.
-                  </h1>
-                  <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
-                    <Link href="/role" className="w-full sm:w-auto">
-                      <Button size="lg" className="w-full sm:w-auto rounded-full px-8">
-                        Start Hiring →
-                      </Button>
-                    </Link>
-                    <Link href="/talent" className="w-full sm:w-auto">
-                      <Button size="lg" variant="ghost" className="w-full sm:w-auto rounded-full px-8 border border-white/10 bg-black/30 backdrop-blur">
-                        Browse Talent
-                      </Button>
-                    </Link>
-                  </div>
-                  <div className="text-[11px] uppercase tracking-widest text-[#71717A] mt-2">Scroll to see how the money moves ↓</div>
-                </motion.div>
-              ) : (
-                <motion.div
-                  key={step}
-                  initial={{ opacity: 0, y: 16 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -16 }}
-                  transition={{ duration: 0.35 }}
-                  className="max-w-[520px] rounded-3xl border border-white/10 bg-black/50 backdrop-blur-xl p-6"
-                >
-                  <div className="flex items-center gap-2 mb-3">
-                    {STEPS.map((s, i) => (
-                      <span key={s.eyebrow} className={`h-1 flex-1 rounded-full ${i <= step ? "bg-[#FF6FAF]" : "bg-white/10"}`} />
-                    ))}
-                  </div>
-                  <div className="text-[10px] font-semibold uppercase tracking-widest text-[#FF6FAF] mb-2">
-                    {step + 1} · {STEPS[step].eyebrow}
-                  </div>
-                  <h2 className="text-xl sm:text-2xl font-bold text-white leading-tight">{STEPS[step].title}</h2>
-                  <p className="text-sm text-[#D4D4D8] mt-3 leading-relaxed">{STEPS[step].body}</p>
-                </motion.div>
-              )}
-            </AnimatePresence>
+        <div className="absolute inset-0 flex flex-col items-center justify-end px-4 pb-8 sm:pb-12 md:pb-16 gap-4">
+          <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 w-full sm:w-auto">
+            <Link href="/role" className="w-full sm:w-auto">
+              <Button size="lg" className="w-full sm:w-auto rounded-full px-8">
+                Start Hiring →
+              </Button>
+            </Link>
+            <Link href="/talent" className="w-full sm:w-auto">
+              <Button size="lg" variant="ghost" className="w-full sm:w-auto rounded-full px-8 border border-white/10">
+                Browse Talent
+              </Button>
+            </Link>
           </div>
         </div>
-      </section>
+      </div>
 
       <section className="max-w-[1200px] mx-auto px-4 sm:px-6 py-16">
         <LiveStats />
+        <div className="mt-14 mb-8">
+          <div className="text-[10px] font-semibold uppercase tracking-widest text-[#FF6FAF] mb-2">How the money moves</div>
+          <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight max-w-[640px]">
+            Freelance work you can prove: agreed terms, checked deliveries, fair disputes.
+          </h2>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {STEPS.map((s, i) => (
+            <GlassCard key={s.eyebrow}>
+              <div className="text-[10px] font-semibold uppercase tracking-widest text-[#FF6FAF] mb-2">
+                {i + 1} · {s.eyebrow}
+              </div>
+              <div className="text-sm font-semibold text-white mb-2 leading-snug">{s.title}</div>
+              <p className="text-sm text-[#A1A1AA] leading-relaxed">{s.body}</p>
+            </GlassCard>
+          ))}
+        </div>
         <div className="mt-14 mb-8">
           <div className="text-[10px] font-semibold uppercase tracking-widest text-[#FF6FAF] mb-2">What Proove adds</div>
           <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight max-w-[640px]">v1 handled money. Proove adds the trust layer around it.</h2>

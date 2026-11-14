@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, Menu, X, Bell, Flame, ChevronDown, LogOut } from "lucide-react";
+import { Search, Menu, X, Bell, Mail, Heart, Flame, ChevronDown, LogOut } from "lucide-react";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -35,7 +35,15 @@ function useOutside(ref: React.RefObject<HTMLElement | null>, onOutside: () => v
   }, [ref, onOutside]);
 }
 
-function NotificationsButton() {
+function DisabledIcon({ icon: Icon, label, title }: { icon: typeof Bell; label: string; title: string }) {
+  return (
+    <button aria-label={label} title={title} disabled className="text-[#D4D4D8] opacity-40 cursor-not-allowed">
+      <Icon size={19} strokeWidth={2} />
+    </button>
+  );
+}
+
+function NotificationsButton({ placeholderWhenSignedOut = false }: { placeholderWhenSignedOut?: boolean }) {
   const { address } = useSession();
   const list = useNotifications(address);
   const now = useNow(30_000);
@@ -43,7 +51,9 @@ function NotificationsButton() {
   const ref = useRef<HTMLDivElement>(null);
   useOutside(ref, () => setOpen(false));
   const unread = list.filter((n) => !n.read).length;
-  if (!address) return null;
+  if (!address) {
+    return placeholderWhenSignedOut ? <DisabledIcon icon={Bell} label="Notifications" title="Sign in to see notifications" /> : null;
+  }
   return (
     <div className="relative" ref={ref}>
       <button
@@ -236,10 +246,9 @@ export function Navbar() {
           </div>
 
           <div className="hidden md:flex items-center gap-5 ml-auto">
-            <NotificationsButton />
-            <Link href="/disputes" className="text-[#D4D4D8] font-medium text-sm transition-colors duration-200 hover:text-[#FF6FAF]">
-              Disputes
-            </Link>
+            <NotificationsButton placeholderWhenSignedOut />
+            <DisabledIcon icon={Mail} label="Messages" title="Messaging isn't implemented yet" />
+            <DisabledIcon icon={Heart} label="Saved" title="Saved items aren't implemented yet" />
             <Link href="/transactions" className="text-[#D4D4D8] font-medium text-sm transition-colors duration-200 hover:text-[#FF6FAF]">
               Orders
             </Link>

@@ -39,7 +39,7 @@ export function DashboardNav({ role }: { role?: "freelancer" | "client" }) {
               href={l.href}
               className={cn(
                 "text-sm font-medium whitespace-nowrap transition-colors py-1.5",
-                pathname === l.href ? "text-white border-b-2 border-[#FF6FAF]" : "text-[#A1A1AA] hover:text-white border-b-2 border-transparent",
+                pathname === l.href ? "text-white" : "text-[#A1A1AA] hover:text-white",
               )}
             >
               {l.label}
