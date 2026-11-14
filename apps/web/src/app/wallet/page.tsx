@@ -10,7 +10,7 @@ import { AddressText, KeyValue, Relative } from "@/components/proove/primitives"
 import { Scene3D, TokenStack, Poster } from "@/components/three";
 import { useEvents, useMyGigs, useNow, useSession } from "@/hooks/use-chain";
 import { useChain } from "@/lib/mock/store";
-import { formatUsdc, USDC } from "@/lib/domain/format";
+import { formatUsdc, USDC } from "@proove/types/format";
 
 function Wallet() {
   const { address, balance } = useSession();

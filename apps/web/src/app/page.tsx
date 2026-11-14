@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
 import { HeroVault, Scene3D, VaultPoster } from "@/components/three";
 import { useCases, useHydrated, useAllMilestones } from "@/hooks/use-chain";
-import { lockedRemaining } from "@/lib/domain/dispute";
-import { formatUsdc } from "@/lib/domain/format";
+import { lockedRemaining } from "@proove/types/dispute";
+import { formatUsdc } from "@proove/types/format";
 import { useChain } from "@/lib/mock/store";
 
 const STEPS = [

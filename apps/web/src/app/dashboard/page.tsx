@@ -13,8 +13,8 @@ import { Empty, PageHeader, PersonName, Stat } from "@/components/proove/primiti
 import { MiniVaults, Scene3D, VaultPoster } from "@/components/three";
 import { useMyGigs, useNow, useProfile, useSession } from "@/hooks/use-chain";
 import { useActionItems } from "@/hooks/use-action-items";
-import { formatStars, formatUsdc } from "@/lib/domain/format";
-import { MAX_REPUTATION_SCORE } from "@/lib/domain/reputation";
+import { formatStars, formatUsdc } from "@proove/types/format";
+import { MAX_REPUTATION_SCORE } from "@proove/types/reputation";
 
 function FreelancerDashboard() {
   const { address, persona } = useSession();

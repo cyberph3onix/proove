@@ -2,15 +2,15 @@
 
 import { useRef, useState } from "react";
 import { Lock, Upload, Wand2 } from "lucide-react";
-import type { DeliveryFile, Milestone, VerificationReport } from "@/lib/domain/types";
+import type { DeliveryFile, Milestone, VerificationReport } from "@proove/types/types";
 import { Modal, Field, HashBadge, TxButton, TxError, textareaClass } from "@/components/proove/primitives";
 import { Button } from "@/components/ui/button";
 import { ReportView } from "./spec-report";
-import { hashDocument, mockHash, sha256Hex } from "@/lib/domain/hash";
+import { hashDocument, mockHash, sha256Hex } from "@proove/types/hash";
 import { verifyDelivery } from "@/lib/mock/ai";
 import { useChain } from "@/lib/mock/store";
 import { useTransaction } from "@/lib/tx";
-import { ZERO_HASH } from "@/lib/domain/types";
+import { ZERO_HASH } from "@proove/types/types";
 import { slotAt } from "@/lib/mock/instructions";
 import { useNow } from "@/hooks/use-chain";
 

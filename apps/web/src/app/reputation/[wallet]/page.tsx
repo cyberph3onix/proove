@@ -10,9 +10,9 @@ import { AddressText, Avatar, Empty, PersonName, SourceNote, TxButton, TxError }
 import { Poster, Scene3D, ScoreCrystal } from "@/components/three";
 import { useProfile, useSession, usePerson } from "@/hooks/use-chain";
 import { useChain } from "@/lib/mock/store";
-import { BADGE_META, MAX_REPUTATION_SCORE, scoreBreakdown } from "@/lib/domain/reputation";
-import { formatDate, formatStars, formatUsdc } from "@/lib/domain/format";
-import { mockAddress } from "@/lib/domain/hash";
+import { BADGE_META, MAX_REPUTATION_SCORE, scoreBreakdown } from "@proove/types/reputation";
+import { formatDate, formatStars, formatUsdc } from "@proove/types/format";
+import { mockAddress } from "@proove/types/hash";
 import { useTransaction } from "@/lib/tx";
 
 function Profile({ wallet }: { wallet: string }) {

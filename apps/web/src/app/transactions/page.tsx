@@ -8,8 +8,8 @@ import { Pill } from "@/components/ui/pill";
 import { Empty, PageHeader, Relative, Tabs } from "@/components/proove/primitives";
 import { useEvents, useNow, useSession } from "@/hooks/use-chain";
 import { useChain } from "@/lib/mock/store";
-import { formatUsdc } from "@/lib/domain/format";
-import type { ChainEvent, ProgramName } from "@/lib/domain/types";
+import { formatUsdc } from "@proove/types/format";
+import type { ChainEvent, ProgramName } from "@proove/types/types";
 
 type Filter = "all" | "money" | "disputes" | "governance";
 const MONEY = new Set(["MilestoneFunded", "MilestoneApproved", "PartialReleaseExecuted", "FullReleaseExecuted", "RefundedAfterDeadline", "RulingExecuted", "ReceivableSold", "FeesClaimed", "DevnetAirdrop"]);

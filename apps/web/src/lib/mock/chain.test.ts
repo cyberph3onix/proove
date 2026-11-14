@@ -8,11 +8,11 @@ import { buildSeed, P } from "./seed";
 import { instructions as ix, ProgramError, type Ctx } from "./instructions";
 import { keeperTick } from "./keeper";
 import type { ChainState } from "./state";
-import { DAY, HOUR, USDC } from "@/lib/domain/format";
-import { hashDocument } from "@/lib/domain/hash";
-import { lockedRemaining, splitRuling } from "@/lib/domain/dispute";
-import { computeReputationScore } from "@/lib/domain/reputation";
-import type { MilestoneSpec } from "@/lib/domain/types";
+import { DAY, HOUR, USDC } from "@proove/types/format";
+import { hashDocument } from "@proove/types/hash";
+import { lockedRemaining, splitRuling } from "@proove/types/dispute";
+import { computeReputationScore } from "@proove/types/reputation";
+import type { MilestoneSpec } from "@proove/types/types";
 
 const T0 = 1_800_000_000;
 

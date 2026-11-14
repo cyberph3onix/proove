@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ChevronDown, Plus, ArrowDownToLine, Activity } from "lucide-react";
 import { useSession } from "@/hooks/use-chain";
 import { Avatar } from "@/components/proove/primitives";
-import { formatUsdc } from "@/lib/domain/format";
+import { formatUsdc } from "@proove/types/format";
 import { cn } from "@/lib/utils";
 
 export function WalletWidget() {

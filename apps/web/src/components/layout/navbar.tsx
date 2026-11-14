@@ -17,7 +17,7 @@ import { NAV_CATEGORIES, type NavSubmenuItem } from "@/components/layout/nav-cat
 import { useHydrated, useNotifications, useNow, useSession } from "@/hooks/use-chain";
 import { useChainStore } from "@/lib/mock/store";
 import { Avatar } from "@/components/proove/primitives";
-import { formatRelative, formatUsdc } from "@/lib/domain/format";
+import { formatRelative, formatUsdc } from "@proove/types/format";
 import { cn } from "@/lib/utils";
 
 const TALENT_CATEGORIES = [

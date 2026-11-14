@@ -26,10 +26,10 @@ import type {
   VerdictReason,
   VerificationReport,
   CredentialSchema,
-} from "@/lib/domain/types";
-import { ZERO_HASH } from "@/lib/domain/types";
-import { mockAddress, mockHash } from "@/lib/domain/hash";
-import { averageRating, computeReputationScore, isEligibleForBadge, ALL_BADGES } from "@/lib/domain/reputation";
+} from "@proove/types/types";
+import { ZERO_HASH } from "@proove/types/types";
+import { mockAddress, mockHash } from "@proove/types/hash";
+import { averageRating, computeReputationScore, isEligibleForBadge, ALL_BADGES } from "@proove/types/reputation";
 import {
   ALLOWED_RULINGS,
   arbitrationFee,
@@ -39,8 +39,8 @@ import {
   releaseFee,
   requiresTwoArbitrators,
   splitRuling,
-} from "@/lib/domain/dispute";
-import { DAY, HOUR, formatUsdc, formatRuling, shortAddress, USDC } from "@/lib/domain/format";
+} from "@proove/types/dispute";
+import { DAY, HOUR, formatUsdc, formatRuling, shortAddress, USDC } from "@proove/types/format";
 import { KEEPER, TREASURY, USDC_MINT, type ChainState } from "./state";
 import { SETTING_RANGES } from "./ranges";
 

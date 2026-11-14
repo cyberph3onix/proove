@@ -3,7 +3,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { produce } from "immer";
-import type { Address, Role } from "@/lib/domain/types";
+import type { Address, Role } from "@proove/types/types";
 import { buildSeed, emptyState } from "./seed";
 import { instructions, ProgramError, type InstructionArgs, type InstructionName } from "./instructions";
 import { keeperTick } from "./keeper";

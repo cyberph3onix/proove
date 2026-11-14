@@ -12,9 +12,9 @@ import { Countdown, Empty, Field, GigStatusPill, Modal, PersonChip, Relative, Tx
 import { MilestoneTrack, Poster, Scene3D } from "@/components/three";
 import { useEvents, useGig, useNow, useProfile, useSession } from "@/hooks/use-chain";
 import { useTransaction } from "@/lib/tx";
-import { formatDate, formatStars, formatUsdc, usdcToBase } from "@/lib/domain/format";
-import { hashDocument, sha256Hex } from "@/lib/domain/hash";
-import { ZERO_HASH, type MilestoneSpec } from "@/lib/domain/types";
+import { formatDate, formatStars, formatUsdc, usdcToBase } from "@proove/types/format";
+import { hashDocument, sha256Hex } from "@proove/types/hash";
+import { ZERO_HASH, type MilestoneSpec } from "@proove/types/types";
 import { USDC_MINT } from "@/lib/mock/state";
 import { useChain } from "@/lib/mock/store";
 

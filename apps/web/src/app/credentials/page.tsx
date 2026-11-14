@@ -11,10 +11,10 @@ import { Empty, PageHeader, SourceNote, TxButton, TxError } from "@/components/p
 import { CredentialCard3D, Poster, Scene3D } from "@/components/three";
 import { useNow, useProfile, useSession } from "@/hooks/use-chain";
 import { useChain } from "@/lib/mock/store";
-import { formatDate, shortAddress } from "@/lib/domain/format";
-import { hashDocument } from "@/lib/domain/hash";
+import { formatDate, shortAddress } from "@proove/types/format";
+import { hashDocument } from "@proove/types/hash";
 import { useTransaction } from "@/lib/tx";
-import type { Credential, CredentialSchema } from "@/lib/domain/types";
+import type { Credential, CredentialSchema } from "@proove/types/types";
 
 const SCHEMAS: { id: CredentialSchema; title: string; body: string; arbitratorOnly?: boolean }[] = [
   { id: "proove.work-summary.v1", title: "Work summary", body: "Jobs, on-time rate, rating, score and dispute record. No earnings." },

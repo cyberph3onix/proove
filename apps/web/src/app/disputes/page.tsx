@@ -8,8 +8,8 @@ import { CaseStatusPill, Countdown, Empty, PageHeader, PersonName, Tabs } from "
 import { Pill } from "@/components/ui/pill";
 import { useCases, useNow, useSession } from "@/hooks/use-chain";
 import { useChain } from "@/lib/mock/store";
-import { formatRuling, formatUsdc, shortAddress } from "@/lib/domain/format";
-import type { DisputeCase } from "@/lib/domain/types";
+import { formatRuling, formatUsdc, shortAddress } from "@proove/types/format";
+import type { DisputeCase } from "@proove/types/types";
 
 type View = "party" | "arbitrating" | "all";
 

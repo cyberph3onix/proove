@@ -6,10 +6,10 @@
  * The AI phase posts one artifact per tick (brief, then seat A, B, C) so the
  * UI can show evaluations landing one at a time.
  */
-import type { AiAttempt, AttemptOutcome, Bps, DisputeCase, SeatId } from "@/lib/domain/types";
-import { aiRecommendation, arbitrationFee, defaultTieBreak, lockedRemaining } from "@/lib/domain/dispute";
-import { hashDocument } from "@/lib/domain/hash";
-import { formatRuling, formatUsdc, shortAddress } from "@/lib/domain/format";
+import type { AiAttempt, AttemptOutcome, Bps, DisputeCase, SeatId } from "@proove/types/types";
+import { aiRecommendation, arbitrationFee, defaultTieBreak, lockedRemaining } from "@proove/types/dispute";
+import { hashDocument } from "@proove/types/hash";
+import { formatRuling, formatUsdc, shortAddress } from "@proove/types/format";
 import { neutralBrief, seatEvaluation } from "./ai";
 import { applyDefault, assignArbitrators, emit, executeChanges, executeRuling, instructions, notify, type Ctx } from "./instructions";
 import { KEEPER, AI_SERVICE, type ChainState } from "./state";

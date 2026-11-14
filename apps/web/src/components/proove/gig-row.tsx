@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { GigWithMilestones } from "@/hooks/use-chain";
-import { formatUsdc } from "@/lib/domain/format";
+import { formatUsdc } from "@proove/types/format";
 import { GigStatusPill, PersonName } from "./primitives";
 import { ProgressBar } from "@/components/ui/progress";
 

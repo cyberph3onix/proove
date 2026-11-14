@@ -12,7 +12,7 @@ import { MiniVaults, Scene3D, VaultPoster } from "@/components/three";
 import { useMyGigs, useNow, useSession } from "@/hooks/use-chain";
 import { useActionItems } from "@/hooks/use-action-items";
 import { useChain } from "@/lib/mock/store";
-import { formatUsdc } from "@/lib/domain/format";
+import { formatUsdc } from "@proove/types/format";
 
 function ClientDashboard() {
   const { address, persona } = useSession();

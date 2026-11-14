@@ -11,10 +11,10 @@ import { Countdown, Empty, PageHeader, PersonName, TxButton, TxError, Tabs, inpu
 import { Poster, ReceivableHandoff, Scene3D } from "@/components/three";
 import { useNow, useSession } from "@/hooks/use-chain";
 import { useChain } from "@/lib/mock/store";
-import { formatUsdc, usdcToBase } from "@/lib/domain/format";
-import { lockedRemaining, releaseFee } from "@/lib/domain/dispute";
+import { formatUsdc, usdcToBase } from "@proove/types/format";
+import { lockedRemaining, releaseFee } from "@proove/types/dispute";
 import { useTransaction } from "@/lib/tx";
-import type { Receivable } from "@/lib/domain/types";
+import type { Receivable } from "@proove/types/types";
 
 function Receivables() {
   const { address } = useSession();

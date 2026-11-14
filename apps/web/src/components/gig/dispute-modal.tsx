@@ -3,10 +3,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AlertTriangle, ShieldCheck } from "lucide-react";
-import type { Milestone } from "@/lib/domain/types";
+import type { Milestone } from "@proove/types/types";
 import { Modal, Field, KeyValue, TxButton, TxError, textareaClass } from "@/components/proove/primitives";
-import { arbitrationFee, disputeBond, lockedRemaining } from "@/lib/domain/dispute";
-import { formatUsdc } from "@/lib/domain/format";
+import { arbitrationFee, disputeBond, lockedRemaining } from "@proove/types/dispute";
+import { formatUsdc } from "@proove/types/format";
 import { useChain } from "@/lib/mock/store";
 import { useTransaction } from "@/lib/tx";
 

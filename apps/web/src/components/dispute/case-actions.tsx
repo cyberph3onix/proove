@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import type { Bps, DisputeCase, MilestoneSpec, SeatId } from "@/lib/domain/types";
-import { ALLOWED_RULINGS } from "@/lib/domain/dispute";
+import type { Bps, DisputeCase, MilestoneSpec, SeatId } from "@proove/types/types";
+import { ALLOWED_RULINGS } from "@proove/types/dispute";
 import { Field, TxButton, TxError, inputClass, textareaClass } from "@/components/proove/primitives";
 import { Button } from "@/components/ui/button";
-import { formatBps, formatRuling, formatUsdc } from "@/lib/domain/format";
-import { hashDocument, sha256Hex } from "@/lib/domain/hash";
+import { formatBps, formatRuling, formatUsdc } from "@proove/types/format";
+import { hashDocument, sha256Hex } from "@proove/types/hash";
 import { useTransaction } from "@/lib/tx";
 import { cn } from "@/lib/utils";
 import { Section } from "./case-panels";

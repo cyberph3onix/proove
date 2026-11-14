@@ -6,9 +6,9 @@
  * inside this file and the store, not across every page.
  */
 import { useEffect, useMemo, useState } from "react";
-import type { Address, DisputeCase, Gig, Milestone, Role } from "@/lib/domain/types";
+import type { Address, DisputeCase, Gig, Milestone, Role } from "@proove/types/types";
 import { useChain, useChainStore, wallNow } from "@/lib/mock/store";
-import { lockedRemaining } from "@/lib/domain/dispute";
+import { lockedRemaining } from "@proove/types/dispute";
 
 export function useHydrated() {
   return useChainStore((s) => s.hydrated);

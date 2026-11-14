@@ -2,7 +2,7 @@
 
 import { useCallback, useRef, useState } from "react";
 import { create } from "zustand";
-import type { TxPhase } from "@/lib/domain/types";
+import type { TxPhase } from "@proove/types/types";
 import { useChainStore } from "@/lib/mock/store";
 import { ProgramError, type InstructionArgs, type InstructionName } from "@/lib/mock/instructions";
 
