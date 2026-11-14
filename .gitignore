@@ -47,3 +47,8 @@ solana.md
 # local agent notes (never commit)
 CLAUDE.md
 .claude/
+
+# local validator ledger
+/.localnet/
+test-ledger/
+deployments/localnet.json
