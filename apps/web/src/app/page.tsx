@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useMotionValueEvent, useScroll } from "framer-motion";
@@ -93,13 +92,9 @@ function stepAt(p: number) {
   return 3;
 }
 
-/** Banner image: shown on the server, with reduced motion, without WebGL, or before three.js loads. */
+/** Fallback: clean background before three.js loads or with reduced motion. */
 function HeroPoster() {
-  return (
-    <div className="absolute inset-0 flex items-center justify-center">
-      <Image src="/images/hero-banner.png" alt="" fill priority sizes="100vw" className="object-cover object-center" />
-    </div>
-  );
+  return <div className="absolute inset-0" />;
 }
 
 /** Small looping 3D illustration for each feature card. */
@@ -140,26 +135,21 @@ export default function Home() {
     <>
       <section ref={storyRef} className="relative h-[500vh]">
         <div className="sticky top-[72px] md:top-[120px] h-[calc(100vh-72px)] md:h-[calc(100vh-120px)] overflow-hidden">
+          {/* wordmark behind the laptop, matching previous commit */}
+          <div
+            aria-hidden
+            className="pointer-events-none select-none absolute inset-x-0 top-[18%] md:top-[14%] text-center font-bold lowercase tracking-[-0.06em] text-[#FF6FAF] transition-opacity duration-700"
+            style={{ fontSize: "clamp(96px, 24vw, 380px)", lineHeight: 0.9, opacity: wordmarkFaded ? 0.12 : 0.92 }}
+          >
+            proove
+          </div>
+
           <Scene3D
             className="absolute inset-0"
             label="A silver laptop that turns to face you, closes on the locked payment, reopens for delivery and releases the coins as you scroll"
             poster={<HeroPoster />}
           >
-            {(active) => (
-              <>
-                {/* wordmark behind the laptop, as in the banner */}
-                <div
-                  aria-hidden
-                  className="pointer-events-none select-none absolute inset-x-0 top-[12%] md:top-[10%] text-center font-semibold lowercase tracking-[-0.04em] text-[#DE5889] transition-opacity duration-700"
-                  style={{ fontSize: "clamp(110px, 25vw, 420px)", lineHeight: 0.9, opacity: wordmarkFaded ? 0.14 : 1, textShadow: "0 0 60px rgba(222,88,137,0.25)" }}
-                >
-                  proove
-                </div>
-                <div className="absolute inset-0">
-                  <HeroLaptop active={active} progress={progress} step={step} steps={STEPS} />
-                </div>
-              </>
-            )}
+            {(active) => <HeroLaptop active={active} progress={progress} step={step} steps={STEPS} />}
           </Scene3D>
 
           <div className="relative h-full max-w-[1440px] mx-auto px-4 sm:px-6 md:px-12 flex flex-col justify-end pb-8 sm:pb-12 md:pb-16 pointer-events-none">

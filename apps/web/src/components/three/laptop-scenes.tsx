@@ -36,12 +36,9 @@ export function HeroLaptop({
       {/* key light from the camera side and a rim light behind, so the lid back reads silver in the banner pose */}
       <directionalLight position={[0, 1.5, 6]} intensity={0.7} />
       <directionalLight position={[-2, 3, -6]} intensity={1.6} />
-      <Laptop progress={progress} step={step} steps={steps} />
-      {/* darker than the shared Floor: the extra key light would otherwise wash it grey */}
-      <mesh rotation-x={-Math.PI / 2} position-y={-0.9}>
-        <circleGeometry args={[6, 64]} />
-        <meshStandardMaterial color="#050506" metalness={0} roughness={0.95} />
-      </mesh>
+      <group scale={0.5}>
+        <Laptop progress={progress} step={step} steps={steps} />
+      </group>
     </Stage>
   );
 }
