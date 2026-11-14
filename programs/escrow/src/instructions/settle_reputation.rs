@@ -58,6 +58,9 @@ pub fn handler(ctx: Context<SettleReputation>) -> Result<()> {
 
     let earnings = ctx.accounts.vault.total_released;
     let successful = ctx.accounts.gig.status == GigStatus::Completed;
+    // On time = something was delivered and paid, and no delivery was late.
+    let delivered_on_time =
+        ctx.accounts.vault.active_milestone > 0 && ctx.accounts.vault.late_deliveries == 0;
 
     reputation::cpi::update_completion(
         CpiContext::new_with_signer(
@@ -70,6 +73,8 @@ pub fn handler(ctx: Context<SettleReputation>) -> Result<()> {
         ),
         successful,
         earnings,
+        delivered_on_time,
+        None, // disputes arrive in Phase 2
     )?;
 
     ctx.accounts.vault.reputation_synced = true;

@@ -1481,6 +1481,28 @@ export type Escrow = {
         {
           "name": "milestone",
           "writable": true
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "gig"
+              }
+            ]
+          }
         }
       ],
       "args": [
@@ -1982,6 +2004,14 @@ export type Escrow = {
             "docs": [
               "Milestones closed via `refund_after_deadline`; they count as accounted",
               "for in settlement, like cancelled ones."
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "lateDeliveries",
+            "docs": [
+              "Deliveries submitted after the gig deadline; any late delivery makes",
+              "the job count as not on time in reputation."
             ],
             "type": "u32"
           }
@@ -2640,6 +2670,24 @@ export type Escrow = {
           {
             "name": "bump",
             "type": "u8"
+          },
+          {
+            "name": "onTimeJobs",
+            "docs": [
+              "Jobs where every delivery landed on or before the gig deadline."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "disputesWon",
+            "docs": [
+              "Disputed jobs whose ruling gave the freelancer at least half."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "disputesLost",
+            "type": "u64"
           }
         ]
       }

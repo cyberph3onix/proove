@@ -594,6 +594,24 @@
           {
             "name": "bump",
             "type": "u8"
+          },
+          {
+            "name": "on_time_jobs",
+            "docs": [
+              "Jobs where every delivery landed on or before the gig deadline."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "disputes_won",
+            "docs": [
+              "Disputed jobs whose ruling gave the freelancer at least half."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "disputes_lost",
+            "type": "u64"
           }
         ]
       }

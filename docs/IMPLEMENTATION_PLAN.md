@@ -57,7 +57,7 @@ The working checklist for building the PRD (`Doodle v2 — Product Requirements 
 - [x] `accept_terms` (freelancer signs, must match `spec_hash`); `fund_milestone` requires it when `spec_hash ≠ 0`; `MIN_MILESTONE_AMOUNT` from config.
 - [x] Protocol fee on every release path (approve, partial, full), sent to the treasury token account.
 - [x] `refund_after_deadline` (client; Funded, after gig deadline + grace). When every milestone is closed, the gig becomes Completed if anything was paid, otherwise Cancelled. Not ported yet: the mock's `ExceedsBudget` check (milestone total ≤ gig budget) in `create_milestone`.
-- [ ] Reputation: `update_completion(delivered_on_time, disputed_outcome)`, counters `on_time_jobs`, `disputes_won`, `disputes_lost`; `FastDeliverer` and `TrustedFreelancer` made awardable (thresholds as in `apps/web/src/lib/domain/reputation.ts`).
+- [x] Reputation: `update_completion(delivered_on_time, disputed_outcome)`, counters `on_time_jobs`, `disputes_won`, `disputes_lost`; `FastDeliverer` and `TrustedFreelancer` made awardable (thresholds as in `apps/web/src/lib/domain/reputation.ts`). Escrow counts late deliveries per gig (`EscrowVault.late_deliveries`, so `submit_delivery` now takes the vault); a job is on time if something was paid and nothing was late. `disputed_outcome` is always `None` until Phase 2.
 - [ ] Achievement: mint with the Metaplex Core permanent freeze plugin.
 - [ ] Gig: `GigStatus::Disputed` (escrow-signed only). Unused until Phase 2 but added now to keep the layout stable.
 - [ ] Tests for every new instruction in v1's five categories (authorization, PDA forgery, state transitions, timing boundaries, arithmetic), plus the invariant: released + refunded + fees + locked = amount.

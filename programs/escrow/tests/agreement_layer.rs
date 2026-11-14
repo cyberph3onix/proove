@@ -589,3 +589,75 @@ fn approve_last_milestone_after_refund_of_other_completes_gig() {
     client_send(&mut env, ix).unwrap();
     assert_eq!(read_gig(&env.svm, &gig).status, GigStatus::Completed);
 }
+
+// ═══════════════════════════════ reputation settlement ═══════════════════════════════
+
+fn profile_of(env: &Env) -> Pubkey {
+    reputation_profile_pda(&env.freelancer.pubkey()).0
+}
+
+fn settle(env: &mut Env, c: &Ctx) {
+    let profile = profile_of(env);
+    anyone_send(env, ix_settle_reputation(&c.gig, &c.vault, &profile)).unwrap();
+}
+
+#[test]
+fn settle_counts_on_time_delivery() {
+    let mut env = setup();
+    let f = env.freelancer.insecure_clone();
+    init_reputation_profile(&mut env, &f);
+    let c = delivered(&mut env, AMOUNT);
+    let ix = ix_approve_milestone(&release_accts(&env, &c));
+    client_send(&mut env, ix).unwrap();
+    settle(&mut env, &c);
+    let p = read_reputation_profile(&env.svm, &profile_of(&env));
+    assert_eq!((p.completed_jobs, p.successful_jobs, p.on_time_jobs), (1, 1, 1));
+    assert_eq!((p.disputes_won, p.disputes_lost), (0, 0));
+}
+
+#[test]
+fn settle_late_delivery_is_not_on_time() {
+    let mut env = setup();
+    let f = env.freelancer.insecure_clone();
+    init_reputation_profile(&mut env, &f);
+    let gig = assigned_gig(&mut env);
+    let c = ctx_for(&mut env, gig, 0);
+    create_with_spec(&mut env, &c, AMOUNT, [0u8; 32]).unwrap();
+    fund(&mut env, &c, AMOUNT).unwrap();
+    // Deliver one second after the gig deadline.
+    warp_seconds(&mut env.svm, TEST_DEADLINE - 1_700_000_000 + 1);
+    submit(&mut env, &c).unwrap();
+    assert_eq!(read_vault(&env.svm, &c.vault).late_deliveries, 1);
+    let ix = ix_approve_milestone(&release_accts(&env, &c));
+    client_send(&mut env, ix).unwrap();
+    settle(&mut env, &c);
+    let p = read_reputation_profile(&env.svm, &profile_of(&env));
+    assert_eq!((p.completed_jobs, p.successful_jobs, p.on_time_jobs), (1, 1, 0));
+}
+
+#[test]
+fn timing_delivery_exactly_at_deadline_is_on_time() {
+    let mut env = setup();
+    let gig = assigned_gig(&mut env);
+    let c = ctx_for(&mut env, gig, 0);
+    create_with_spec(&mut env, &c, AMOUNT, [0u8; 32]).unwrap();
+    fund(&mut env, &c, AMOUNT).unwrap();
+    warp_seconds(&mut env.svm, TEST_DEADLINE - 1_700_000_000);
+    submit(&mut env, &c).unwrap();
+    assert_eq!(read_vault(&env.svm, &c.vault).late_deliveries, 0);
+}
+
+#[test]
+fn settle_refunded_gig_counts_as_cancelled_and_not_on_time() {
+    let mut env = setup();
+    let f = env.freelancer.insecure_clone();
+    init_reputation_profile(&mut env, &f);
+    let c = funded_undelivered(&mut env);
+    warp_seconds(&mut env.svm, until_refund_allowed());
+    let ix = ix_refund_after_deadline(&refund_accts(&env, &c));
+    client_send(&mut env, ix).unwrap();
+    settle(&mut env, &c);
+    let p = read_reputation_profile(&env.svm, &profile_of(&env));
+    assert_eq!((p.completed_jobs, p.successful_jobs, p.cancelled_jobs, p.on_time_jobs), (1, 0, 1, 0));
+    assert_eq!(p.total_earnings, 0);
+}

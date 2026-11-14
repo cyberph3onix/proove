@@ -24,4 +24,6 @@ pub enum ReputationError {
     InvalidEarnings,
     #[msg("Badge metadata exceeds maximum length")]
     MetadataTooLong,
+    #[msg("Dispute outcome must be between 0 and 10000 basis points")]
+    InvalidDisputeOutcome,
 }

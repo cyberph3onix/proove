@@ -471,6 +471,16 @@
         {
           "name": "earnings",
           "type": "u64"
+        },
+        {
+          "name": "delivered_on_time",
+          "type": "bool"
+        },
+        {
+          "name": "disputed_outcome",
+          "type": {
+            "option": "u16"
+          }
         }
       ]
     }
@@ -638,6 +648,11 @@
       "code": 6010,
       "name": "MetadataTooLong",
       "msg": "Badge metadata exceeds maximum length"
+    },
+    {
+      "code": 6011,
+      "name": "InvalidDisputeOutcome",
+      "msg": "Dispute outcome must be between 0 and 10000 basis points"
     }
   ],
   "types": [
@@ -760,6 +775,18 @@
           },
           {
             "name": "reputation_score",
+            "type": "u64"
+          },
+          {
+            "name": "on_time_jobs",
+            "type": "u64"
+          },
+          {
+            "name": "disputes_won",
+            "type": "u64"
+          },
+          {
+            "name": "disputes_lost",
             "type": "u64"
           }
         ]
@@ -946,6 +973,24 @@
           {
             "name": "bump",
             "type": "u8"
+          },
+          {
+            "name": "on_time_jobs",
+            "docs": [
+              "Jobs where every delivery landed on or before the gig deadline."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "disputes_won",
+            "docs": [
+              "Disputed jobs whose ruling gave the freelancer at least half."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "disputes_lost",
+            "type": "u64"
           }
         ]
       }

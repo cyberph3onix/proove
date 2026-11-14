@@ -80,6 +80,9 @@ pub mod known_scores {
             created_at: 0,
             updated_at: 0,
             bump: 0,
+            on_time_jobs: 0,
+            disputes_won: 0,
+            disputes_lost: 0,
         }
     }
 
@@ -98,6 +101,9 @@ pub mod known_scores {
             created_at: 0,
             updated_at: 0,
             bump: 0,
+            on_time_jobs: 0,
+            disputes_won: 0,
+            disputes_lost: 0,
         }
     }
 
@@ -116,6 +122,9 @@ pub mod known_scores {
             created_at: 0,
             updated_at: 0,
             bump: 0,
+            on_time_jobs: 0,
+            disputes_won: 0,
+            disputes_lost: 0,
         }
     }
 
@@ -134,6 +143,9 @@ pub mod known_scores {
             created_at: 0,
             updated_at: 0,
             bump: 0,
+            on_time_jobs: 0,
+            disputes_won: 0,
+            disputes_lost: 0,
         }
     }
 }

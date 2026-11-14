@@ -477,6 +477,16 @@ export type Reputation = {
         {
           "name": "earnings",
           "type": "u64"
+        },
+        {
+          "name": "deliveredOnTime",
+          "type": "bool"
+        },
+        {
+          "name": "disputedOutcome",
+          "type": {
+            "option": "u16"
+          }
         }
       ]
     }
@@ -644,6 +654,11 @@ export type Reputation = {
       "code": 6010,
       "name": "metadataTooLong",
       "msg": "Badge metadata exceeds maximum length"
+    },
+    {
+      "code": 6011,
+      "name": "invalidDisputeOutcome",
+      "msg": "Dispute outcome must be between 0 and 10000 basis points"
     }
   ],
   "types": [
@@ -766,6 +781,18 @@ export type Reputation = {
           },
           {
             "name": "reputationScore",
+            "type": "u64"
+          },
+          {
+            "name": "onTimeJobs",
+            "type": "u64"
+          },
+          {
+            "name": "disputesWon",
+            "type": "u64"
+          },
+          {
+            "name": "disputesLost",
             "type": "u64"
           }
         ]
@@ -952,6 +979,24 @@ export type Reputation = {
           {
             "name": "bump",
             "type": "u8"
+          },
+          {
+            "name": "onTimeJobs",
+            "docs": [
+              "Jobs where every delivery landed on or before the gig deadline."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "disputesWon",
+            "docs": [
+              "Disputed jobs whose ruling gave the freelancer at least half."
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "disputesLost",
+            "type": "u64"
           }
         ]
       }

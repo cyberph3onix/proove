@@ -84,9 +84,9 @@ pub fn compute_reputation_score(profile: &UserProfile) -> Result<u64> {
 /// fields -- `award_badge` is permissionless, so eligibility must never
 /// depend on anything the caller could assert unverified.
 ///
-/// `FastDeliverer` and `TrustedFreelancer` depend on signals this program
-/// does not track on-chain (delivery timing, external endorsements) and are
-/// not awardable yet; they return `false` until that data source exists.
+/// `FastDeliverer` and `TrustedFreelancer` use the on-time and dispute
+/// counters escrow reports at settlement. Thresholds mirror
+/// `packages/types/src/reputation.ts::isEligibleForBadge`.
 pub fn is_eligible_for_badge(profile: &UserProfile, badge_type: BadgeType) -> bool {
     match badge_type {
         BadgeType::FirstGig => profile.completed_jobs >= 1,
@@ -96,7 +96,17 @@ pub fn is_eligible_for_badge(profile: &UserProfile, badge_type: BadgeType) -> bo
             profile.rating_count >= 5 && profile.average_rating >= 500
         }
         BadgeType::TopRated => profile.rating_count >= 10 && profile.average_rating >= 450,
-        BadgeType::TrustedFreelancer | BadgeType::FastDeliverer => false,
+        // 5+ jobs, at least 90% on time.
+        BadgeType::FastDeliverer => {
+            profile.completed_jobs >= 5
+                && (profile.on_time_jobs as u128) * 100 >= (profile.completed_jobs as u128) * 90
+        }
+        // 10+ jobs, at most 5% of jobs lost in disputes, 4.5+ stars.
+        BadgeType::TrustedFreelancer => {
+            profile.completed_jobs >= 10
+                && (profile.disputes_lost as u128) * 20 <= profile.completed_jobs as u128
+                && profile.average_rating >= 450
+        }
     }
 }
 
@@ -119,6 +129,9 @@ mod tests {
             created_at: 0,
             updated_at: 0,
             bump: 0,
+            on_time_jobs: 0,
+            disputes_won: 0,
+            disputes_lost: 0,
         }
     }
 
@@ -182,5 +195,30 @@ mod tests {
         let enough_samples = profile(10, 10, 0, 0, 500, 5);
         assert!(!is_eligible_for_badge(&few_samples, BadgeType::FiveStarPerformer));
         assert!(is_eligible_for_badge(&enough_samples, BadgeType::FiveStarPerformer));
+    }
+
+    fn with_counters(completed: u64, on_time: u64, lost: u64, avg: u32) -> UserProfile {
+        UserProfile { on_time_jobs: on_time, disputes_lost: lost, ..profile(completed, completed, 0, 0, avg, 10) }
+    }
+
+    #[test]
+    fn badge_eligibility_fast_deliverer() {
+        // Needs 5+ jobs with at least 90% on time.
+        assert!(!is_eligible_for_badge(&with_counters(4, 4, 0, 0), BadgeType::FastDeliverer));
+        assert!(is_eligible_for_badge(&with_counters(5, 5, 0, 0), BadgeType::FastDeliverer));
+        assert!(is_eligible_for_badge(&with_counters(10, 9, 0, 0), BadgeType::FastDeliverer)); // exactly 90%
+        assert!(!is_eligible_for_badge(&with_counters(10, 8, 0, 0), BadgeType::FastDeliverer));
+        // No overflow on extreme counters.
+        assert!(is_eligible_for_badge(&with_counters(u64::MAX, u64::MAX, 0, 0), BadgeType::FastDeliverer));
+    }
+
+    #[test]
+    fn badge_eligibility_trusted_freelancer() {
+        // 10+ jobs, ≤5% disputes lost, 4.5+ stars.
+        assert!(!is_eligible_for_badge(&with_counters(9, 9, 0, 500), BadgeType::TrustedFreelancer));
+        assert!(is_eligible_for_badge(&with_counters(10, 0, 0, 450), BadgeType::TrustedFreelancer));
+        assert!(!is_eligible_for_badge(&with_counters(10, 0, 0, 449), BadgeType::TrustedFreelancer));
+        assert!(is_eligible_for_badge(&with_counters(20, 0, 1, 450), BadgeType::TrustedFreelancer)); // exactly 5%
+        assert!(!is_eligible_for_badge(&with_counters(20, 0, 2, 450), BadgeType::TrustedFreelancer));
     }
 }

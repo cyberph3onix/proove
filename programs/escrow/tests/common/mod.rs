@@ -571,6 +571,7 @@ pub fn ix_submit_delivery_with(
             freelancer: *freelancer,
             gig: *gig,
             milestone: *milestone,
+            vault: vault_pda(gig).0,
         }
         .to_account_metas(None),
     )

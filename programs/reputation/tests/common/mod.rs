@@ -190,9 +190,20 @@ pub fn ix_update_completion(
     successful: bool,
     earnings: u64,
 ) -> Instruction {
+    ix_update_completion_full(escrow_authority, profile, successful, earnings, false, None)
+}
+
+pub fn ix_update_completion_full(
+    escrow_authority: &Pubkey,
+    profile: &Pubkey,
+    successful: bool,
+    earnings: u64,
+    delivered_on_time: bool,
+    disputed_outcome: Option<u16>,
+) -> Instruction {
     Instruction::new_with_bytes(
         reputation::ID,
-        &reputation::instruction::UpdateCompletion { successful, earnings }.data(),
+        &reputation::instruction::UpdateCompletion { successful, earnings, delivered_on_time, disputed_outcome }.data(),
         reputation::accounts::UpdateCompletion {
             escrow_authority: *escrow_authority,
             profile: *profile,

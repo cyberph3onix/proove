@@ -26,6 +26,9 @@ pub struct CompletionUpdated {
     pub successful_jobs: u64,
     pub total_earnings: u64,
     pub reputation_score: u64,
+    pub on_time_jobs: u64,
+    pub disputes_won: u64,
+    pub disputes_lost: u64,
 }
 
 #[event]

@@ -3,7 +3,9 @@ use gig::Gig;
 
 use crate::errors::EscrowError;
 use crate::events::DeliverySubmitted;
-use crate::state::{Milestone, MilestoneStatus};
+use crate::constants::VAULT_SEED;
+use crate::state::{EscrowVault, Milestone, MilestoneStatus};
+use crate::utils::checked_add;
 
 #[derive(Accounts)]
 pub struct SubmitDelivery<'info> {
@@ -17,6 +19,13 @@ pub struct SubmitDelivery<'info> {
         constraint = milestone.gig == gig.key() @ EscrowError::Unauthorized,
     )]
     pub milestone: Account<'info, Milestone>,
+
+    #[account(
+        mut,
+        seeds = [VAULT_SEED, gig.key().as_ref()],
+        bump = vault.bump,
+    )]
+    pub vault: Account<'info, EscrowVault>,
 }
 
 /// Records the freelancer's delivery submission and starts the timeout clocks.
@@ -46,6 +55,11 @@ pub fn handler(
     milestone.submitted_slot = clock.slot;
     milestone.delivery_hash = delivery_hash;
     milestone.report_hash = report_hash;
+
+    if now > ctx.accounts.gig.deadline {
+        let vault = &mut ctx.accounts.vault;
+        vault.late_deliveries = checked_add(vault.late_deliveries as u64, 1)? as u32;
+    }
 
     emit!(DeliverySubmitted {
         gig: ctx.accounts.gig.key(),

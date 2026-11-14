@@ -51,8 +51,10 @@ pub mod reputation {
         ctx: Context<UpdateCompletion>,
         successful: bool,
         earnings: u64,
+        delivered_on_time: bool,
+        disputed_outcome: Option<u16>,
     ) -> Result<()> {
-        update_completion::handler(ctx, successful, earnings)
+        update_completion::handler(ctx, successful, earnings, delivered_on_time, disputed_outcome)
     }
 
     /// Awards a deterministically-eligible badge to a profile.

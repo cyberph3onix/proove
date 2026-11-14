@@ -29,6 +29,9 @@ pub struct EscrowVault {
     /// Milestones closed via `refund_after_deadline`; they count as accounted
     /// for in settlement, like cancelled ones.
     pub refunded_milestones: u32,
+    /// Deliveries submitted after the gig deadline; any late delivery makes
+    /// the job count as not on time in reputation.
+    pub late_deliveries: u32,
 }
 
 impl EscrowVault {
@@ -45,7 +48,8 @@ impl EscrowVault {
         + 1 // bump
         + 8 // total_fees
         + 8 // total_refunded
-        + 4; // refunded_milestones
+        + 4 // refunded_milestones
+        + 4; // late_deliveries
 
     /// Milestones that are closed one way or another (released, cancelled, refunded).
     pub fn accounted_milestones(&self) -> u64 {

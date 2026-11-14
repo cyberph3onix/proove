@@ -19,6 +19,12 @@ pub struct UserProfile {
     pub created_at: i64,
     pub updated_at: i64,
     pub bump: u8,
+    // ── Proove additions, reported by escrow at settlement ──
+    /// Jobs where every delivery landed on or before the gig deadline.
+    pub on_time_jobs: u64,
+    /// Disputed jobs whose ruling gave the freelancer at least half.
+    pub disputes_won: u64,
+    pub disputes_lost: u64,
 }
 
 impl UserProfile {
@@ -35,5 +41,8 @@ impl UserProfile {
         + 4 // badges_earned
         + 8 // created_at
         + 8 // updated_at
-        + 1; // bump
+        + 1 // bump
+        + 8 // on_time_jobs
+        + 8 // disputes_won
+        + 8; // disputes_lost
 }

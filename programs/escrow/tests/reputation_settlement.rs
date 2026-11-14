@@ -307,7 +307,13 @@ fn test_direct_reputation_update_completion_by_non_escrow_signer_rejected() {
     let (profile, _) = reputation_profile_pda(&freelancer.pubkey());
     let ix = anchor_lang::solana_program::instruction::Instruction::new_with_bytes(
         reputation::ID,
-        &reputation::instruction::UpdateCompletion { successful: true, earnings: 1_000_000 }.data(),
+        &reputation::instruction::UpdateCompletion {
+            successful: true,
+            earnings: 1_000_000,
+            delivered_on_time: true,
+            disputed_outcome: None,
+        }
+        .data(),
         reputation::accounts::UpdateCompletion { escrow_authority: attacker.pubkey(), profile }.to_account_metas(None),
     );
     let result = send(&mut env.svm, &env.payer, &[ix], &[&env.payer, &attacker]);
