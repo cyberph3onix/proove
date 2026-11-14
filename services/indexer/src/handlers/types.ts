@@ -39,6 +39,20 @@ export const TABLES = {
     key: "account",
     columns: ["owner", "badge_type", "mint", "claimed", "claimed_at"],
   },
+  protocol_config: {
+    key: "address",
+    columns: [
+      "admin", "treasury", "partial_timeout", "full_timeout", "partial_bps", "fee_bps", "min_milestone",
+      "no_delivery_grace", "updated_at",
+    ],
+  },
+  vaults: {
+    key: "address",
+    columns: [
+      "gig", "token_account", "mint", "total_locked", "total_released", "total_fees", "total_refunded",
+      "milestone_count", "active_milestone", "cancelled_milestones", "refunded_milestones", "late_deliveries", "reputation_synced",
+    ],
+  },
 } as const;
 
 export type EntityTable = keyof typeof TABLES;
@@ -49,6 +63,9 @@ export type ColumnValue = string | number | boolean | null | string[];
  * whose stored slot is <= the write's slot; `inc` adds to columns whose
  * stored slot is < the write's slot (an account snapshot at or after the
  * event's slot already includes it); `remove` deletes the row (account closed).
+ * `copy` sets columns from another row (e.g. the protocol terms in force when
+ * a milestone is funded), using only source values written at or before the
+ * mutation's slot; explicit `set` values win over copied ones.
  */
 export interface Mutation {
   table: EntityTable;
@@ -56,6 +73,7 @@ export interface Mutation {
   set?: Record<string, ColumnValue>;
   inc?: Record<string, number>;
   remove?: boolean;
+  copy?: { table: EntityTable; key: Address; columns: Record<string, string> };
 }
 
 export interface EventContext {

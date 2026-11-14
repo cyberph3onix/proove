@@ -4,8 +4,9 @@ import { buildApi } from "../src/api/server";
 import type { Pool } from "../src/db/pool";
 import { ingestTransactions } from "../src/ingest";
 import { pk, programIds, programs } from "./helpers";
+import { protocolConfigPda } from "../src/handlers/util";
 import { dbAvailable, setupTestDb } from "./db";
-import { buildScenario } from "./scenario";
+import { TERMS, buildScenario } from "./scenario";
 
 describe.skipIf(!dbAvailable)("HTTP API (Postgres)", () => {
   let pool: Pool;
@@ -99,6 +100,7 @@ describe.skipIf(!dbAvailable)("HTTP API (Postgres)", () => {
       deadline: 9_999,
       applicants: [],
       slot: 14,
+      vault: null, // no EscrowVault snapshot in this history
     });
     expect((await get(`/v1/gigs/${pk().toBase58()}`)).status).toBe(404);
   });
@@ -112,14 +114,19 @@ describe.skipIf(!dbAvailable)("HTTP API (Postgres)", () => {
       gig: s.gig.toBase58(),
       index: 0,
       amount: 400,
-      released: 400,
+      released: 396,
+      feesPaid: 4,
+      refunded: 0,
       status: "completed",
       submittedAt: 2_000,
       submittedSlot: 15,
       approvedAt: 2_100,
-      specHash: null,
-      termsAccepted: null,
-      terms: null,
+      specHash: s.spec.hex,
+      deliveryHash: s.delivery.hex,
+      reportHash: s.report.hex,
+      termsAccepted: true,
+      terms: { partialTimeout: TERMS.partial_timeout, fullTimeout: TERMS.full_timeout, partialBps: TERMS.partial_bps, feeBps: TERMS.fee_bps },
+      title: null,
       slot: 17,
     });
     expect((await get(`/v1/milestones/${s.m1.toBase58()}`)).status).toBe(404);
@@ -128,7 +135,7 @@ describe.skipIf(!dbAvailable)("HTTP API (Postgres)", () => {
   describe("GET /v1/activity", () => {
     it("returns ChainEvents newest first", async () => {
       const { body } = await get("/v1/activity?limit=100");
-      expect(body.items).toHaveLength(19);
+      expect(body.items).toHaveLength(23);
       expect(body.items[0]).toMatchObject({ program: "gig", name: "GigUpdated", slot: 23, gig: s.gig3.toBase58() });
       const slots = body.items.map((e: { slot: number }) => e.slot);
       expect([...slots].sort((a, b) => b - a)).toEqual(slots);
@@ -137,6 +144,11 @@ describe.skipIf(!dbAvailable)("HTTP API (Postgres)", () => {
         amount: 400,
         receipt: expect.stringContaining("locked in escrow"),
       });
+      const byName = (name: string) => body.items.filter((e: { name: string }) => e.name === name);
+      expect(byName("TermsAccepted")[0]).toMatchObject({ actors: [s.freelancer.toBase58()], milestone: s.m0.toBase58(), receipt: expect.stringContaining("accepted the milestone terms") });
+      expect(byName("ProtocolFeeCollected").map((e: { amount: number }) => e.amount)).toEqual([3, 1]);
+      expect(byName("ProtocolConfigUpdated")[0]).toMatchObject({ actors: [s.admin.toBase58()], receipt: expect.stringContaining("1% fee") });
+      expect(byName("DeliverySubmitted")[0].receipt).toContain("with a verification report");
     });
 
     it("filters by wallet: named actors plus events on that wallet's gigs", async () => {
@@ -156,9 +168,21 @@ describe.skipIf(!dbAvailable)("HTTP API (Postgres)", () => {
         seen.push(...body.items.map((e: { signature: string; eventIndex: number }) => `${e.signature}:${e.eventIndex}`));
         cursor = body.nextCursor;
       } while (cursor);
-      expect(seen).toHaveLength(19);
-      expect(new Set(seen).size).toBe(19);
+      expect(seen).toHaveLength(23);
+      expect(new Set(seen).size).toBe(23);
     });
+  });
+
+  it("GET /v1/protocol returns the config and treasury fee totals with account and slot", async () => {
+    const { status, body } = await get("/v1/protocol");
+    expect(status).toBe(200);
+    const account = protocolConfigPda(programIds.escrow);
+    expect(body).toMatchObject({ account, slot: 9 });
+    expect(body.config.feeBps).toEqual({ value: TERMS.fee_bps, account, slot: 9 });
+    expect(body.config.partialTimeout).toEqual({ value: TERMS.partial_timeout, account, slot: 9 });
+    expect(body.config.treasury).toEqual({ value: s.treasury.toBase58(), account, slot: 9 });
+    expect(body.config.noDeliveryGrace.value).toBe(TERMS.no_delivery_grace);
+    expect(body.treasury).toEqual({ totalFees: { value: 4, account: s.treasury.toBase58(), slot: 17 }, feeCount: 2 });
   });
 
   describe("GET /v1/reputation/:wallet", () => {
@@ -170,8 +194,9 @@ describe.skipIf(!dbAvailable)("HTTP API (Postgres)", () => {
       expect(body.profile.ratingCount).toEqual({ value: 1, account, slot: 19 });
       expect(body.profile.averageRating).toEqual({ value: 500, account, slot: 19 });
       expect(body.profile.completedJobs).toEqual({ value: 0, account, slot: 18 });
-      // Not carried by the v1 programs yet.
-      expect(body.profile.onTimeJobs).toEqual({ value: null, account: null, slot: null });
+      // Extended counters start at 0 with the profile.
+      expect(body.profile.onTimeJobs).toEqual({ value: 0, account, slot: 18 });
+      expect(body.profile.disputesLost).toEqual({ value: 0, account, slot: 18 });
       expect(body.ratings).toHaveLength(1);
       expect(body.ratings[0].score).toEqual({ value: 5, account: s.rating.toBase58(), slot: 19 });
       expect(body.badges).toEqual([]);

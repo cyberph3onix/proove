@@ -30,7 +30,7 @@ pnpm --filter @proove/indexer dev        # API on :4100 + poller
 
 ## Adding a program event or field
 
-1. Copy the new IDL into `src/idl/` (and add the program to `src/programs.ts` if it is a new program).
+1. Regenerate the IDLs (`pnpm --filter @proove/idl generate`); the indexer reads them from `@proove/idl` (add a new program to `src/programs.ts`).
 2. Add a handler to `EVENT_HANDLERS` in `src/handlers/events.ts`: its activity row (`actors`, `gig`, `milestone`, `amount`, `receipt`) and the column writes (`set`, `inc`, `remove`). New account types go in `src/handlers/accounts.ts`.
 3. New columns need a new `migrations/NNNN_*.sql` file and an entry in `TABLES` (`src/handlers/types.ts`).
 
@@ -42,11 +42,12 @@ All amounts are token base units, times unix seconds. Lists return `{ items, nex
 
 - `GET /healthz`: database check plus ingest cursors.
 - `GET /v1/gigs?q=&category=&skill=&minBudget=&maxBudget=&status=&client=&freelancer=&cursor=&limit=`: full-text search (`websearch_to_tsquery` over title, skills, category, description) ranked by relevance, then newest. `status` takes a comma list.
-- `GET /v1/gigs/:gig`, `GET /v1/gigs/:gig/milestones`, `GET /v1/milestones/:milestone`: `Gig` / `Milestone` shapes from `@proove/types` plus `slot`.
+- `GET /v1/gigs/:gig`, `GET /v1/gigs/:gig/milestones`, `GET /v1/milestones/:milestone`: `Gig` / `Milestone` shapes from `@proove/types` plus `slot`. Gig detail adds `vault` (EscrowVault totals: locked, released, fees, refunded, milestone counters) once the vault account has been snapshotted, else `null`. Hashes are 64-char hex (`ZERO_HASH` = none).
 - `GET /v1/activity?wallet=&gig=&milestone=&cursor=&limit=`: `ChainEvent`s, newest first. `wallet` matches named actors and events on gigs where the wallet is client or freelancer.
-- `GET /v1/reputation/:wallet`: the `UserProfile` counters, badges and received ratings, each value as `{ value, account, slot }`.
+- `GET /v1/protocol`: the escrow `ProtocolConfig` (admin, treasury, timeouts, bps, min milestone, no-delivery grace), each value as `{ value, account, slot }`, plus `treasury.totalFees` (summed `ProtocolFeeCollected` events; `slot` is the latest one) and `feeCount`. 404 until the config is indexed.
+- `GET /v1/reputation/:wallet`: the `UserProfile` counters (including `onTimeJobs`, `disputesWon`, `disputesLost`), badges and received ratings, each value as `{ value, account, slot }`.
 
-Fields the v1 programs do not emit yet (milestone `title`, `specHash`, `deliveryHash`, `reportHash`, `termsAccepted`, `feesPaid`, `refunded`, `terms`; profile `onTimeJobs`, `disputesWon`, `disputesLost`; rating `gig`) are `null` until the extended programs ship. `submittedSlot` is taken from the `DeliverySubmitted` transaction slot meanwhile; gig `mint` is only known after an account backfill.
+Still `null`: milestone `title` (off-chain spec), rating `gig` (ratings carry `job_id` only), gig `mint` until a Gig or EscrowVault snapshot. Milestone `terms` are `null` before funding; at `MilestoneFunded` they are copied from the indexed `ProtocolConfig` if it was written at or before the funding slot (otherwise they wait for a Milestone account snapshot). Profile counters indexed before the extended reputation program stay `null` until re-snapshotted.
 
 ## Tests
 

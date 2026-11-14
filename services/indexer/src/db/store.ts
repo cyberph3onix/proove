@@ -1,4 +1,4 @@
-import type { ActivityInfo, Mutation } from "../handlers/types";
+import type { ActivityInfo, ColumnValue, Mutation } from "../handlers/types";
 import { TABLES } from "../handlers/types";
 import type { Plain } from "../decode";
 import type { PoolClient, Queryable } from "./pool";
@@ -63,7 +63,8 @@ export async function applyMutation(client: PoolClient, m: Mutation, slot: numbe
   }
 
   const fieldSlots = row?.field_slots ?? {};
-  const set = Object.entries(m.set ?? {}).filter(([c]) => fieldSlots[c] === undefined || fieldSlots[c]! <= slot);
+  const copied = m.copy ? await copiedValues(client, m.copy, slot) : {};
+  const set = Object.entries({ ...copied, ...m.set }).filter(([c]) => fieldSlots[c] === undefined || fieldSlots[c]! <= slot);
   const inc = Object.entries(m.inc ?? {}).filter(([c]) => fieldSlots[c] === undefined || fieldSlots[c]! < slot);
   checkColumns(m.table, [...set.map(([c]) => c), ...inc.map(([c]) => c)]);
   const stamped = Object.fromEntries([...set, ...inc].map(([c]) => [c, slot]));
@@ -94,6 +95,20 @@ export async function applyMutation(client: PoolClient, m: Mutation, slot: numbe
   values.push(JSON.stringify(stamped));
   assigns.push(`field_slots = field_slots || $${values.length}::jsonb`);
   await client.query(`UPDATE ${m.table} SET ${assigns.join(", ")} WHERE ${keyCol} = $1`, values);
+}
+
+/** Source values for `Mutation.copy`, keeping only columns the source row had written by `slot`. */
+async function copiedValues(client: PoolClient, copy: NonNullable<Mutation["copy"]>, slot: number): Promise<Record<string, ColumnValue>> {
+  checkColumns(copy.table, Object.values(copy.columns));
+  const { rows } = await client.query(`SELECT * FROM ${copy.table} WHERE ${TABLES[copy.table].key} = $1`, [copy.key]);
+  const src = rows[0];
+  if (!src) return {};
+  const out: Record<string, ColumnValue> = {};
+  for (const [dest, from] of Object.entries(copy.columns)) {
+    const at = (src.field_slots as Record<string, number>)[from];
+    if (at !== undefined && at <= slot && src[from] != null) out[dest] = src[from];
+  }
+  return out;
 }
 
 export interface Cursor {

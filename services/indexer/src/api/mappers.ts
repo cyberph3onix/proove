@@ -4,14 +4,15 @@ import type { ChainEvent, GigStatus, MilestoneStatus, MilestoneTerms, ProgramNam
  * API shapes. They follow the `@proove/types` domain types so the web app's
  * `use-chain` hook can swap its mock source for this API, with two
  * differences: every row carries the `slot` it was last written at, and
- * values the v1 programs do not emit yet are `null` (see the migration).
+ * values the indexer has not seen yet are `null` (e.g. milestone `title`,
+ * which is off-chain, or `terms` before funding).
  */
 export interface ApiGig {
   address: string;
   id: number | null;
   client: string | null;
   freelancer: string | null;
-  /** Only known from an account snapshot (v1 events do not carry it). */
+  /** Only known from a Gig or EscrowVault account snapshot (events do not carry it). */
   mint: string | null;
   status: GigStatus;
   createdAt: number | null;
@@ -51,6 +52,43 @@ export interface ApiMilestone {
 }
 
 export type ApiChainEvent = ChainEvent & { eventIndex: number };
+
+/** Escrow `EscrowVault` totals for a gig (from account snapshots). */
+export interface ApiVault {
+  address: string;
+  tokenAccount: string | null;
+  mint: string | null;
+  totalLocked: number;
+  totalReleased: number;
+  totalFees: number;
+  totalRefunded: number;
+  milestoneCount: number;
+  activeMilestone: number;
+  cancelledMilestones: number;
+  refundedMilestones: number;
+  lateDeliveries: number;
+  reputationSynced: boolean;
+  slot: number;
+}
+
+export function toVault(r: Row): ApiVault {
+  return {
+    address: r.address,
+    tokenAccount: r.token_account,
+    mint: r.mint,
+    totalLocked: r.total_locked,
+    totalReleased: r.total_released,
+    totalFees: r.total_fees,
+    totalRefunded: r.total_refunded,
+    milestoneCount: r.milestone_count,
+    activeMilestone: r.active_milestone,
+    cancelledMilestones: r.cancelled_milestones,
+    refundedMilestones: r.refunded_milestones,
+    lateDeliveries: r.late_deliveries,
+    reputationSynced: r.reputation_synced,
+    slot: r.slot,
+  };
+}
 
 type Row = Record<string, any>;
 
@@ -143,6 +181,19 @@ export const PROFILE_FIELDS = {
   disputesWon: "disputes_won",
   disputesLost: "disputes_lost",
   createdAt: "created_at",
+  updatedAt: "updated_at",
+} as const;
+
+/** ProtocolConfig field -> protocol_config column (the `ProtocolConfig` domain type plus admin/treasury). */
+export const PROTOCOL_FIELDS = {
+  admin: "admin",
+  treasury: "treasury",
+  partialTimeout: "partial_timeout",
+  fullTimeout: "full_timeout",
+  partialBps: "partial_bps",
+  feeBps: "fee_bps",
+  minMilestone: "min_milestone",
+  noDeliveryGrace: "no_delivery_grace",
   updatedAt: "updated_at",
 } as const;
 

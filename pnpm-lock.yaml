@@ -225,6 +225,9 @@ importers:
       '@proove/config':
         specifier: workspace:*
         version: link:../../packages/config
+      '@proove/idl':
+        specifier: workspace:*
+        version: link:../../packages/idl
       '@proove/types':
         specifier: workspace:*
         version: link:../../packages/types

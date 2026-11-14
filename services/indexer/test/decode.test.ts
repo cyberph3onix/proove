@@ -107,7 +107,7 @@ describe("handler tables", () => {
   });
 
   it("has an account handler for every stateful IDL account", () => {
-    const skipped = new Set(["escrow.EscrowVault", "achievement.AchievementConfig"]);
+    const skipped = new Set(["achievement.AchievementConfig"]);
     const missing = programs
       .flatMap((p) => (p.idl.accounts ?? []).map((a) => `${p.name}.${a.name}`))
       .filter((k) => !skipped.has(k) && !(k in ACCOUNT_HANDLERS));
